@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KETI싱가포르 정부과제 검색 대시보드</title>
+
+    <!-- CSS Libraries -->
+    <link href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <h1>KETI싱가포르 정부과제 검색 대시보드</h1>
+            <p>접근하려면 비밀번호를 입력하세요</p>
+            <form id="loginForm">
+                <input type="password" id="passwordInput" placeholder="비밀번호" autocomplete="off">
+                <button type="submit" class="btn btn-primary">로그인</button>
+            </form>
+            <p class="login-error" id="loginError"></p>
+        </div>
+    </div>
+
+    <div class="container" id="mainContainer" style="display: none;">
+        <!-- Header -->
+        <header class="header">
+            <h1>싱가포르 정부과제 검색 대시보드(2006-2025)</h1>
+            <p class="subtitle">Singapore Research Grant - 5,772개 과제</p>
+            <p class="source-info">과제출처: National Research Foundation (NRF), Ministry of Health (MOH), Ministry of Education (MOE), A*STAR</p>
+        </header>
+
+        <!-- Search & Filter Section -->
+        <section class="search-section">
+            <div class="search-row">
+                <div class="search-group">
+                    <label for="institutionSelect">수행기관</label>
+                    <select id="institutionSelect" multiple></select>
+                </div>
+                <div class="search-group">
+                    <label for="piSelect">과제책임자 (PI)</label>
+                    <select id="piSelect" multiple></select>
+                </div>
+            </div>
+
+            <div class="search-row">
+                <div class="search-group full-width">
+                    <label for="keywordInput">키워드 검색 (복수 키워드는 AND 조건)</label>
+                    <input type="text" id="keywordInput" placeholder="키워드를 공백 또는 콤마로 구분하여 입력하세요...">
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>과제 상태</label>
+                    <div class="checkbox-group" id="statusFilters"></div>
+                </div>
+
+                <div class="filter-group">
+                    <label>시작일 범위</label>
+                    <div class="date-range">
+                        <input type="text" id="dateFrom" placeholder="시작">
+                        <span>~</span>
+                        <input type="text" id="dateTo" placeholder="종료">
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label>수행기간 (개월)</label>
+                    <div class="duration-range">
+                        <input type="number" id="durationMin" placeholder="최소" min="0">
+                        <span>~</span>
+                        <input type="number" id="durationMax" placeholder="최대" min="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-row">
+                <button id="resetBtn" class="btn btn-secondary">필터 초기화</button>
+                <div class="export-buttons">
+                    <button id="exportCsvBtn" class="btn btn-primary">CSV 다운로드</button>
+                    <button id="exportExcelBtn" class="btn btn-primary">Excel 다운로드</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Count -->
+        <section class="results-info">
+            <span id="resultsCount">로딩 중...</span>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="charts-section" id="chartsSection">
+            <div class="chart-container wordcloud-container" id="wordCloudContainer">
+                <h3>Top 연구 키워드</h3>
+                <div id="wordCloud"></div>
+            </div>
+            <div class="chart-container">
+                <h3>기관별 과제 수</h3>
+                <canvas id="barChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3>연도별 과제 추이</h3>
+                <canvas id="lineChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3>상태별 분포</h3>
+                <canvas id="pieChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Word Cloud Modal -->
+        <div class="modal" id="wordCloudModal">
+            <div class="modal-content chart-modal-content">
+                <button class="modal-close" id="wordCloudModalClose">&times;</button>
+                <h2>Top 연구 키워드</h2>
+                <div class="chart-modal-container" id="modalWordCloud"></div>
+            </div>
+        </div>
+
+        <!-- Results Table -->
+        <section class="table-section">
+            <div class="table-wrapper">
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th data-sort="id">과제번호 <span class="sort-icon"></span></th>
+                            <th data-sort="title">과제명 <span class="sort-icon"></span></th>
+                            <th data-sort="status">상태 <span class="sort-icon"></span></th>
+                            <th data-sort="pi">과제책임자 <span class="sort-icon"></span></th>
+                            <th data-sort="inst">수행기관 <span class="sort-icon"></span></th>
+                            <th data-sort="date">시작일 <span class="sort-icon"></span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination"></div>
+        </section>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="spinner"></div>
+            <p>데이터 로딩 중...</p>
+        </div>
+
+        <!-- Detail Modal -->
+        <div class="modal" id="detailModal">
+            <div class="modal-content">
+                <button class="modal-close" id="modalClose">&times;</button>
+                <div id="modalBody"></div>
+            </div>
+        </div>
+
+        <!-- Chart Modal -->
+        <div class="modal" id="chartModal">
+            <div class="modal-content chart-modal-content">
+                <button class="modal-close" id="chartModalClose">&times;</button>
+                <h2 id="chartModalTitle"></h2>
+                <div class="chart-modal-container">
+                    <canvas id="modalChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/scripts/choices.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-cloud@1.2.5/build/d3.layout.cloud.min.js"></script>
+
+    <!-- Auth JS -->
+    <script src="js/auth.js"></script>
+
+    <!-- Custom JS -->
+    <script src="js/app.js"></script>
+</body>
+</html>
