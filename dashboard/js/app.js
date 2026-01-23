@@ -98,11 +98,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyFilters();
 });
 
-// Load JSON Data
+// Load Data (from embedded JS or fallback to JSON)
 async function loadData() {
     try {
-        const response = await fetch('data/projects.json');
-        allProjects = await response.json();
+        // Try to get data from embedded JS first (deployed version)
+        if (typeof _getData === 'function') {
+            allProjects = _getData();
+        } else if (window._useJsonFallback) {
+            // Fallback to JSON for local development
+            const response = await fetch('data/projects.json');
+            allProjects = await response.json();
+        } else {
+            // Default fallback
+            const response = await fetch('data/projects.json');
+            allProjects = await response.json();
+        }
 
         // Parse dates for sorting
         allProjects.forEach(p => {

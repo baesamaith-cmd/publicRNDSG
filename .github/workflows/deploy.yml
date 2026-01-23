@@ -16,6 +16,11 @@ jobs:
           mkdir -p deploy
           cp index.html deploy/
           cp -r dashboard deploy/
+
+          # Convert JSON to JavaScript (prevent direct URL access)
+          echo "const _d=$(cat deploy/dashboard/data/projects.json);function _getData(){return _d;}" > deploy/dashboard/data/data.js
+          rm deploy/dashboard/data/projects.json
+
           find deploy -name '.DS_Store' -delete
           touch deploy/.nojekyll
 
