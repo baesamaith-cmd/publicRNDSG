@@ -1,13 +1,15 @@
-// Netlify Serverless Function - Fetch data from private repo
+// Netlify Serverless Function - Fetch data from private repo (with gzip)
 const https = require('https');
+const zlib = require('zlib');
 
 exports.handler = async (event, context) => {
     // CORS headers
     const headers = {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept-Encoding',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Content-Encoding': 'gzip'
     };
 
     // Handle preflight
@@ -19,22 +21,22 @@ exports.handler = async (event, context) => {
     const authHeader = event.headers.authorization || event.headers.Authorization;
     const password = process.env.APP_PASSWORD;
 
-    console.log('Auth header:', authHeader);
-    console.log('Expected:', `Bearer ${password}`);
-
     if (!authHeader || authHeader !== `Bearer ${password}`) {
         return {
             statusCode: 401,
-            headers,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({ error: 'Unauthorized' })
         };
     }
 
     try {
-        // Fetch from private GitHub repo using https module
+        // Fetch from private GitHub repo
         const githubToken = process.env.GITHUB_TOKEN;
 
-        const data = await new Promise((resolve, reject) => {
+        const jsonData = await new Promise((resolve, reject) => {
             const options = {
                 hostname: 'raw.githubusercontent.com',
                 path: '/baesamaith-cmd/privateRNDSG/main/dashboard/data/projects.json',
@@ -51,7 +53,7 @@ exports.handler = async (event, context) => {
                 res.on('data', chunk => body += chunk);
                 res.on('end', () => {
                     if (res.statusCode === 200) {
-                        resolve(JSON.parse(body));
+                        resolve(body);
                     } else {
                         reject(new Error(`GitHub API error: ${res.statusCode}`));
                     }
@@ -62,19 +64,23 @@ exports.handler = async (event, context) => {
             req.end();
         });
 
+        // Compress with gzip
+        const compressed = zlib.gzipSync(jsonData);
+
         return {
             statusCode: 200,
-            headers: {
-                ...headers,
-                'Cache-Control': 'max-age=300'
-            },
-            body: JSON.stringify(data)
+            headers,
+            body: compressed.toString('base64'),
+            isBase64Encoded: true
         };
     } catch (error) {
         console.error('Error:', error);
         return {
             statusCode: 500,
-            headers,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({ error: 'Failed to fetch data', details: error.message })
         };
     }
