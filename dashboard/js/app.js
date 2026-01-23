@@ -98,19 +98,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyFilters();
 });
 
-// Load Data (from embedded JS or fallback to JSON)
+// API Configuration
+const API_URL = 'https://igms-api.netlify.app/.netlify/functions/data';
+
+// Load Data from Netlify API (production) or local JSON (development)
 async function loadData() {
     try {
-        // Try to get data from embedded JS first (deployed version)
-        if (typeof _getData === 'function') {
-            allProjects = _getData();
-        } else if (window._useJsonFallback) {
-            // Fallback to JSON for local development
+        // Get password from sessionStorage (set by auth.js)
+        const password = sessionStorage.getItem('igms_password');
+
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            // Local development - use JSON file
             const response = await fetch('data/projects.json');
             allProjects = await response.json();
         } else {
-            // Default fallback
-            const response = await fetch('data/projects.json');
+            // Production - fetch from Vercel API with password
+            const response = await fetch(API_URL, {
+                headers: {
+                    'Authorization': `Bearer ${password}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
+
             allProjects = await response.json();
         }
 

@@ -17,9 +17,8 @@ jobs:
           cp index.html deploy/
           cp -r dashboard deploy/
 
-          # Convert JSON to JavaScript (prevent direct URL access)
-          echo "const _d=$(cat deploy/dashboard/data/projects.json);function _getData(){return _d;}" > deploy/dashboard/data/data.js
-          rm deploy/dashboard/data/projects.json
+          # Remove data folder entirely (data comes from Vercel API)
+          rm -rf deploy/dashboard/data
 
           find deploy -name '.DS_Store' -delete
           touch deploy/.nojekyll
