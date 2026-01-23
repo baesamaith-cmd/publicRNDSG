@@ -91,12 +91,12 @@ function getInstitutionAbbr(fullName) {
     return fullName;
 }
 
-// Initialize Application
-document.addEventListener('DOMContentLoaded', async () => {
+// Initialize Application - called from auth.js after login
+async function initApp() {
     await loadData();
     initializeUI();
     applyFilters();
-});
+}
 
 // API Configuration
 const API_URL = 'https://searchsgpartners.netlify.app/.netlify/functions/data';
