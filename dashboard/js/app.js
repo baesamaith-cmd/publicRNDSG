@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // API Configuration
-const API_URL = 'https://igms-api.netlify.app/.netlify/functions/data';
+const API_URL = 'https://searchsgpartners.netlify.app/.netlify/functions/data';
 
 // Load Data from Netlify API (production) or local JSON (development)
 async function loadData() {

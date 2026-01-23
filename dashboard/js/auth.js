@@ -35,7 +35,7 @@
 
         // For production, verify password via API
         try {
-            const response = await fetch('https://igms-api.netlify.app/.netlify/functions/data', {
+            const response = await fetch('https://searchsgpartners.netlify.app/.netlify/functions/data', {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${password}`
