@@ -60,5 +60,9 @@
     function showDashboard() {
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('mainContainer').style.display = 'block';
+        // Initialize app after login
+        if (typeof initApp === 'function') {
+            initApp();
+        }
     }
 })();
