@@ -11,11 +11,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Prepare deploy folder
+        run: |
+          mkdir -p deploy
+          cp index.html deploy/
+          cp -r dashboard deploy/
+          touch deploy/.nojekyll
+
       - name: Deploy to Public Repo
         uses: peaceiris/actions-gh-pages@v3
         with:
           personal_token: ${{ secrets.DEPLOY_TOKEN }}
           external_repository: baesamaith-cmd/publicRNDSG
-          publish_dir: ./
+          publish_dir: ./deploy
           publish_branch: main
-          exclude_assets: '.github'
