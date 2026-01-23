@@ -16,6 +16,7 @@ jobs:
           mkdir -p deploy
           cp index.html deploy/
           cp -r dashboard deploy/
+          find deploy -name '.DS_Store' -delete
           touch deploy/.nojekyll
 
       - name: Deploy to Public Repo
