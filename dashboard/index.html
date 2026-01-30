@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,14 +11,30 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=2">
 </head>
+
 <body>
     <!-- Login Screen -->
     <div class="login-screen" id="loginScreen">
         <div class="login-box">
             <h1>KETI싱가포르 정부과제 검색 대시보드</h1>
             <p>접근하려면 비밀번호를 입력하세요</p>
+            <div class="login-notice" style="text-align: left;">
+                <h3 style="margin-bottom: 10px; font-size: 0.95rem; color: #2563eb;">AI 의미 검색 사용법</h3>
+                <p>AI 검색은 단어가 일치하지 않아도 의미를 이해하여 관련 과제를 찾아줍니다.</p>
+                <ol style="margin-left: 20px; margin-top: 10px; font-size: 0.85rem; color: #64748b;">
+                    <li><strong>AI 모드 켜기</strong>: 검색창 우측 스위치를 켭니다. (최초 실행 시 모델 다운로드 5~10초 소요)</li>
+                    <li style="margin-top: 6px;">
+                        <strong>검색어 입력 (영어 추천)</strong>:
+                        <ul style="margin-left: 15px; margin-top: 4px;">
+                            <li>"Heart disease" → "Cardiovascular" 검색됨</li>
+                            <li>"Elderly people" → "Geriatric" 검색됨</li>
+                        </ul>
+                    </li>
+                    <li style="margin-top: 6px;"><strong>필터 조합</strong>: 기관, 연도 등 다른 필터와 함께 사용 가능합니다.</li>
+                </ol>
+            </div>
             <form id="loginForm">
                 <input type="password" id="passwordInput" placeholder="비밀번호" autocomplete="off">
                 <button type="submit" class="btn btn-primary">로그인</button>
@@ -31,7 +48,8 @@
         <header class="header">
             <h1>싱가포르 정부과제 검색 대시보드(2006-2025)</h1>
             <p class="subtitle">Singapore Research Grant - 5,772개 과제</p>
-            <p class="source-info">과제출처: National Research Foundation (NRF), Ministry of Health (MOH), Ministry of Education (MOE), A*STAR</p>
+            <p class="source-info">과제출처: National Research Foundation (NRF), Ministry of Health (MOH), Ministry of
+                Education (MOE), A*STAR</p>
         </header>
 
         <!-- Search & Filter Section -->
@@ -50,7 +68,25 @@
             <div class="search-row">
                 <div class="search-group full-width">
                     <label for="keywordInput">키워드 검색 (복수 키워드는 AND 조건)</label>
-                    <input type="text" id="keywordInput" placeholder="키워드를 공백 또는 콤마로 구분하여 입력하세요...">
+                    <div class="keyword-input-wrapper">
+                        <input type="text" id="keywordInput" placeholder="키워드를 공백 또는 콤마로 구분하여 입력하세요...">
+                        <div class="ai-toggle-wrapper">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="aiSearchToggle">
+                                <span class="slider round"></span>
+                            </label>
+                            <span class="toggle-label">AI 의미 검색</span>
+                        </div>
+                    </div>
+                    <div id="aiProgress" class="ai-progress hidden">
+                        <div class="progress-info">
+                            <span id="aiStatusText">AI 모델 로딩 중...</span>
+                            <span id="aiProgressPercent">0%</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div id="aiProgressBar" class="progress-bar-fill"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -179,9 +215,11 @@
     <script src="https://cdn.jsdelivr.net/npm/d3-cloud@1.2.5/build/d3.layout.cloud.min.js"></script>
 
     <!-- Auth JS -->
-    <script src="js/auth.js"></script>
+    <script src="js/auth.js?v=2"></script>
 
     <!-- Custom JS -->
-    <script src="js/app.js"></script>
+    <script type="module" src="js/ai-search.js?v=2"></script>
+    <script src="js/app.js?v=2"></script>
 </body>
+
 </html>

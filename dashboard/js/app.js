@@ -274,7 +274,26 @@ function initEventListeners() {
     document.getElementById('piSelect').addEventListener('change', debouncedApplyFilters);
 
     // Keyword input
-    document.getElementById('keywordInput').addEventListener('input', debounce(applyFilters, 300));
+    document.getElementById('keywordInput').addEventListener('input', debounce(applyFilters, 500)); // Increased debounce for AI
+
+    // AI Toggle
+    document.getElementById('aiSearchToggle').addEventListener('change', async (e) => {
+        if (e.target.checked) {
+            // Initial Load
+            if (window.initAISearch) {
+                const success = await window.initAISearch();
+                if (!success) {
+                    e.target.checked = false; // Revert if failed
+                    alert('AI 모델 로드에 실패했습니다.');
+                    return;
+                }
+                applyFilters(); // Re-run search with AI
+            }
+        } else {
+            document.getElementById('aiProgress').classList.add('hidden');
+            applyFilters(); // Re-run search without AI
+        }
+    });
 
     // Status checkboxes
     document.getElementById('statusFilters').addEventListener('change', applyFilters);
@@ -398,7 +417,7 @@ function initCharts() {
         beginAtZero: true,
         ticks: {
             stepSize: 1,
-            callback: function(value) {
+            callback: function (value) {
                 if (Number.isInteger(value)) {
                     return value;
                 }
@@ -471,7 +490,7 @@ function initCharts() {
 }
 
 // Apply Filters
-function applyFilters() {
+async function applyFilters() {
     const selectedInstitutions = institutionSelect.getValue(true);
     const selectedPIs = piSelect.getValue(true);
     const keywords = document.getElementById('keywordInput').value.toLowerCase().split(/[\s,]+/).filter(Boolean);
@@ -480,6 +499,24 @@ function applyFilters() {
     const dateTo = document.getElementById('dateTo').value;
     const durationMin = parseInt(document.getElementById('durationMin').value) || 0;
     const durationMax = parseInt(document.getElementById('durationMax').value) || Infinity;
+
+    // AI Search Check
+    const isAIEnabled = document.getElementById('aiSearchToggle').checked;
+    let semanticScores = {}; // Map: id -> score
+
+    if (isAIEnabled && keywords.length > 0) {
+        const query = document.getElementById('keywordInput').value; // Get raw input
+        // Use global window function
+        if (window.searchSemantic) {
+            const results = await window.searchSemantic(query, allProjects, 100);
+            // Create map for O(1) lookup
+            results.forEach(r => semanticScores[r.id] = r.score);
+
+            // If no results from AI (e.g. model not ready or short query), rely on keyword match only?
+            // For now, if AI is enabled, we ONLY show AI matches (intersection with other filters)
+            // But if query is too short, we might fallback.
+        }
+    }
 
     filteredProjects = allProjects.filter(p => {
         // Institution filter
@@ -492,11 +529,19 @@ function applyFilters() {
             return false;
         }
 
-        // Keyword filter (AND logic)
+        // Search Filter (Keyword OR AI)
         if (keywords.length > 0) {
-            const searchText = `${p.abs || ''} ${p.kw || ''}`.toLowerCase();
-            if (!keywords.every(kw => searchText.includes(kw))) {
-                return false;
+            if (isAIEnabled && Object.keys(semanticScores).length > 0) {
+                // AI Mode: Must be in semantic results
+                if (!semanticScores[p.id]) return false;
+                // Add score to project object for sorting (temporary)
+                p._aiScore = semanticScores[p.id];
+            } else {
+                // Classic Keyword Mode (AND logic)
+                const searchText = `${p.abs || ''} ${p.kw || ''} ${p.title || ''}`.toLowerCase();
+                if (!keywords.every(kw => searchText.includes(kw))) {
+                    return false;
+                }
             }
         }
 
@@ -520,6 +565,29 @@ function applyFilters() {
 
         return true;
     });
+
+    // If AI Search, sort by Score
+    if (isAIEnabled && keywords.length > 0) {
+        filteredProjects.sort((a, b) => (b._aiScore || 0) - (a._aiScore || 0));
+        // Update Sort UI to show "Relevant" (custom)
+        // We'll just plain clear the sort icons for now
+        document.querySelectorAll('#resultsTable th').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
+    } else {
+        // Re-apply current sort if switching back
+        // But only if we didn't just AI sort
+        if (filteredProjects.length > 0 && !filteredProjects[0]._aiScore) {
+            // Basic sort maintain
+            const th = document.querySelector(`#resultsTable th.sort-asc, #resultsTable th.sort-desc`);
+            if (th) {
+                const field = th.dataset.sort;
+                const order = th.classList.contains('sort-asc') ? 'asc' : 'desc';
+                sortProjects(field, order);
+            } else {
+                // Default date desc
+                sortProjects('date', 'desc');
+            }
+        }
+    }
 
     currentPage = 1;
     renderTable();
@@ -843,7 +911,7 @@ function updateWordCloud() {
             .attr('transform', d => `translate(${d.x},${d.y}) rotate(${d.rotate})`)
             .text(d => d.text)
             .style('cursor', 'pointer')
-            .on('click', function(event, d) {
+            .on('click', function (event, d) {
                 event.stopPropagation();
                 // Click keyword to search
                 document.getElementById('keywordInput').value = d.text;
@@ -934,7 +1002,7 @@ function openWordCloudModal() {
             .attr('text-anchor', 'middle')
             .attr('transform', d => `translate(${d.x},${d.y}) rotate(${d.rotate})`)
             .text(d => d.text)
-            .on('click', function(event, d) {
+            .on('click', function (event, d) {
                 event.stopPropagation();
                 // Click keyword to search
                 document.getElementById('keywordInput').value = d.text;
@@ -1019,7 +1087,7 @@ function openChartModal(chartId, title) {
         beginAtZero: true,
         ticks: {
             stepSize: 1,
-            callback: function(value) {
+            callback: function (value) {
                 if (Number.isInteger(value)) {
                     return value;
                 }
