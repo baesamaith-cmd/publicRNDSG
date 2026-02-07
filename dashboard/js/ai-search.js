@@ -3,7 +3,10 @@ import { env, pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers
 
 // Configuration
 env.allowLocalModels = false;
-env.useBrowserCache = true;
+env.useBrowserCache = ('caches' in self && self.isSecureContext);
+if (!env.useBrowserCache) {
+    console.warn('Browser cache is unavailable (likely due to insecure HTTP context). Model will be downloaded on every session. Enable HTTPS to fix this.');
+}
 
 const EMBEDDINGS_PATH = 'data/embeddings.json';
 const MODEL_NAME = 'Xenova/all-MiniLM-L6-v2';
