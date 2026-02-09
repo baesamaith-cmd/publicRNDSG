@@ -1,7 +1,0 @@
-.env
-venv/
-__pycache__/
-.DS_Store
-*.pem
-key.pem
-cert.pem
