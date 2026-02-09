@@ -155,12 +155,15 @@ function renderDashboardGraph(projects) {
         return;
     }
 
-    const capped = projects.slice(0, DASH_MAX_PROJECTS);
+    const limitSelect = document.getElementById('graphLimitSelect');
+    const maxProjects = limitSelect ? parseInt(limitSelect.value) : 200;
+
+    const capped = projects.slice(0, maxProjects);
     const capMsg = document.getElementById('dashboardCapMsg');
 
-    if (projects.length > DASH_MAX_PROJECTS) {
+    if (projects.length > maxProjects) {
         if (capMsg) {
-            capMsg.textContent = `성능을 위해 상위 ${DASH_MAX_PROJECTS}개 과제만 표시합니다. (전체: ${projects.length}개)`;
+            capMsg.textContent = `Performance optimized: Showing top ${maxProjects} projects (Total: ${projects.length})`;
             capMsg.style.display = 'block';
         }
     } else {
@@ -568,9 +571,18 @@ function updateDashboardGraph(filtered) {
     }
 }
 
+// Auto-refresh when limit changes
+window.onLimitChange = function () {
+    // Only re-render if graph is currently visible and we have data
+    if (dashGraphVisible && window.filteredProjects) {
+        renderDashboardGraph(window.filteredProjects);
+    }
+};
+
 // Make functions global
 window.updateDashboardGraph = updateDashboardGraph;
 window.toggleDashboardGraph = toggleDashboardGraph;
 window.fitDashboardGraph = fitDashboardGraph;
 window.closeDashboardNodePopup = closeDashboardNodePopup;
 window.toggleLegendType = toggleLegendType;
+window.onLimitChange = onLimitChange;

@@ -298,20 +298,29 @@
                             <p class="text-sm text-slate-500">Connections between researches, institutions, and topics
                             </p>
                         </div>
-                        <button id="toggleGraphBtn" onclick="toggleDashboardGraph()"
-                            class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                            </svg>
-                            Generate Graph
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <select id="graphLimitSelect" onchange="onLimitChange()"
+                                class="bg-indigo-50 border-transparent text-indigo-700 text-sm font-semibold rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block px-4 py-2.5 cursor-pointer hover:bg-indigo-100 transition-colors appearance-none text-center min-w-[140px]">
+                                <option value="200" selected>Max 200 Projects</option>
+                                <option value="500">Max 500 Projects</option>
+                                <option value="1000">Max 1000 Projects</option>
+                                <option value="2000">Max 2000 Projects</option>
+                            </select>
+                            <button id="toggleGraphBtn" onclick="toggleDashboardGraph()"
+                                class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                                Generate Graph
+                            </button>
+                        </div>
                     </div>
 
                     <p id="dashboardCapMsg" class="text-amber-500 font-medium text-sm text-center mb-4 hidden"></p>
 
                     <div id="dashboardViz"
-                        class="w-full h-[600px] border border-slate-100 rounded-xl bg-slate-50/50 hidden"></div>
+                        class="w-full h-[600px] bg-slate-50 rounded-xl border border-slate-200 hidden relative"></div>
 
                     <div id="dashboardLegend" class="flex flex-wrap gap-3 justify-center mt-6 hidden">
                         <div class="legend-item flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium cursor-pointer hover:bg-blue-100 transition-colors"
