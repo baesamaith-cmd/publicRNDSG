@@ -10,7 +10,7 @@ import numpy as np
 DATA_DIR = 'dashboard/data'
 INPUT_FILE = os.path.join(DATA_DIR, 'projects.json')
 OUTPUT_FILE = os.path.join(DATA_DIR, 'embeddings.json')
-MODEL_NAME = 'sentence-transformers/all-MiniLM-L6-v2'
+MODEL_NAME = 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'
 
 def main():
     print(f"Loading data from {INPUT_FILE}...")

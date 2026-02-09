@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@theme {
+    --font-sans: 'Inter', sans-serif;
+    --color-primary: #6366f1;
+    /* Indigo 500 */
+    --color-secondary: #64748b;
+    /* Slate 500 */
+}
+
+/* 
+   v4 uses CSS variables for theme configuration. 
+   We can also keep tailwind.config.js for content detection if needed, 
+   but v4 usually auto-detects content or we configure it in package.json/CLI args.
+   The CLI arg `-i ...` is correct.
+   
+   If we want to use the custom colors in HTML like 'bg-primary', we need to define them in @theme.
+   
+   The `tailwind.config.js` I created might still be used if detected.
+   Let's see if this works.
+*/
+
+.legend-item {
+    transition: all 0.2s;
+    opacity: 1;
+}
+
+.legend-item.inactive {
+    opacity: 0.4;
+    filter: grayscale(100%);
+    background-color: #f1f5f9;
+    /* slate-100 */
+    color: #94a3b8;
+    /* slate-400 */
+}
+
+/* Main Navigation Tabs */
+/* Main Navigation Tabs */
+.nav-item.active {
+    background-color: white;
+    color: #4f46e5;
+    /* indigo-600 */
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    /* shadow-md */
+    border: 1px solid #e2e8f0;
+    /* slate-200 */
+}

@@ -6,215 +6,462 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KETI싱가포르 정부과제 검색 대시보드</title>
 
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <!-- CSS Libraries -->
     <link href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/style.css?v=2">
+    <!-- Tailwind CSS (Built) -->
+    <link href="/dashboard/css/output.css" rel="stylesheet">
+
+    <!-- Custom CSS (Overrides & Libraries) -->
+    <link rel="stylesheet" href="/dashboard/css/style.css?v=5">
 </head>
 
-<body>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-indigo-100 selection:text-indigo-700">
+
     <!-- Login Screen -->
-    <div class="login-screen" id="loginScreen">
-        <div class="login-box">
-            <h1>KETI싱가포르 정부과제 검색 대시보드</h1>
-            <p>접근하려면 비밀번호를 입력하세요</p>
-            <div class="login-notice" style="text-align: left;">
-                <h3 style="margin-bottom: 10px; font-size: 0.95rem; color: #2563eb;">AI 의미 검색 사용법</h3>
-                <p>AI 검색은 단어가 일치하지 않아도 의미를 이해하여 관련 과제를 찾아줍니다.</p>
-                <ol style="margin-left: 20px; margin-top: 10px; font-size: 0.85rem; color: #64748b;">
-                    <li><strong>AI 모드 켜기</strong>: 검색창 우측 스위치를 켭니다. (최초 실행 시 모델 다운로드 5~10초 소요)</li>
-                    <li style="margin-top: 6px;">
-                        <strong>검색어 입력 (영어 추천)</strong>:
-                        <ul style="margin-left: 15px; margin-top: 4px;">
-                            <li>"Heart disease" → "Cardiovascular" 검색됨</li>
-                            <li>"Elderly people" → "Geriatric" 검색됨</li>
-                        </ul>
-                    </li>
-                    <li style="margin-top: 6px;"><strong>필터 조합</strong>: 기관, 연도 등 다른 필터와 함께 사용 가능합니다.</li>
-                </ol>
+    <div id="loginScreen" class="fixed inset-0 z-[100] flex items-center justify-center bg-cover bg-center"
+        style="background-image: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);">
+        <div
+            class="bg-white/90 backdrop-blur-xl p-8 rounded-2xl shadow-2xl w-full max-w-md mx-4 border border-white/20">
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold text-slate-900">IGMS Dashboard</h1>
+                <p class="text-slate-500 text-sm mt-1">Authorized Personnel Only</p>
             </div>
-            <form id="loginForm">
-                <input type="password" id="passwordInput" placeholder="비밀번호" autocomplete="off">
-                <button type="submit" class="btn btn-primary">로그인</button>
+
+            <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-6">
+                <h3 class="text-sm font-semibold text-indigo-700 mb-2 flex items-center">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    AI Semantic Search
+                </h3>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    AI understands context beyond keywords.<br>
+                    • "Heart disease" → Finds "Cardiovascular"<br>
+                    • "Elderly people" → Finds "Geriatric"
+                </p>
+            </div>
+
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <input type="password" id="passwordInput" placeholder="Enter Password" autocomplete="off"
+                        class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-sm">
+                </div>
+                <button type="submit"
+                    class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold py-3 px-4 rounded-xl hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+                    Access Dashboard
+                </button>
             </form>
-            <p class="login-error" id="loginError"></p>
+            <p id="loginError" class="text-rose-500 text-sm font-medium mt-4 text-center min-h-[1.25rem]"></p>
         </div>
     </div>
 
-    <div class="container" id="mainContainer" style="display: none;">
+    <!-- Main Container -->
+    <div id="mainContainer" class="hidden min-h-screen pb-12">
+
         <!-- Header -->
-        <header class="header">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h1>싱가포르 정부과제 검색 대시보드(2006-2025)</h1>
-                    <p class="subtitle">Singapore Research Grant - 5,772개 과제</p>
-                </div>
-                <div>
-                    <a href="graph.html" class="btn btn-primary"
-                        style="text-decoration: none; display: flex; align-items: center; gap: 8px;">
-                        <span>🕸️</span> 네트워크 분석
-                    </a>
+        <!-- Header -->
+        <header class="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="py-4 space-y-4">
+                    <div class="text-center md:text-left">
+                        <h1
+                            class="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">
+                            Singapore Grants Analysis
+                        </h1>
+                        <p class="text-xs text-slate-500 mt-1 font-medium tracking-wide">
+                            2006-2025 • 5,772 PROJECTS • NRF / MOH / MOE / A*STAR
+                        </p>
+                    </div>
+
+                    <!-- Navigation -->
+                    <nav class="flex w-full gap-2 bg-slate-100 p-1.5 rounded-xl">
+                        <button
+                            class="nav-item active flex-1 px-4 py-3 text-base font-bold rounded-lg transition-all duration-200 text-slate-500 hover:bg-white/60 hover:text-slate-700"
+                            data-target="view-dashboard">
+                            📊 Project Dashboard
+                        </button>
+                        <button
+                            class="nav-item flex-1 px-4 py-3 text-base font-bold rounded-lg transition-all duration-200 text-slate-500 hover:bg-white/60 hover:text-slate-700"
+                            data-target="view-matcher">
+                            🤝 Researcher Matcher
+                        </button>
+                    </nav>
                 </div>
             </div>
-            <p class="source-info">과제출처: National Research Foundation (NRF), Ministry of Health (MOH), Ministry of
-                Education (MOE), A*STAR</p>
         </header>
 
-        <!-- Search & Filter Section -->
-        <section class="search-section">
-            <div class="search-row">
-                <div class="search-group">
-                    <label for="institutionSelect">수행기관</label>
-                    <select id="institutionSelect" multiple></select>
-                </div>
-                <div class="search-group">
-                    <label for="piSelect">과제책임자 (PI)</label>
-                    <select id="piSelect" multiple></select>
-                </div>
-            </div>
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
 
-            <div class="search-row">
-                <div class="search-group full-width">
-                    <label for="keywordInput">키워드 검색 (복수 키워드는 AND 조건)</label>
-                    <div class="keyword-input-wrapper">
-                        <input type="text" id="keywordInput" placeholder="키워드를 공백 또는 콤마로 구분하여 입력하세요...">
-                        <div class="ai-toggle-wrapper">
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="aiSearchToggle">
-                                <span class="slider round"></span>
-                            </label>
-                            <span class="toggle-label">AI 의미 검색</span>
+            <!-- VIEW 1: Dashboard -->
+            <div id="view-dashboard" class="view-section space-y-8">
+
+                <!-- Search & Filter Card -->
+                <section
+                    class="bg-white rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] ring-1 ring-slate-900/5 p-6">
+                    <!-- Filters Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="space-y-1.5 hidden md:block">
+                            <label
+                                class="text-xs font-semibold text-slate-500 uppercase tracking-wider pl-1">Institution</label>
+                            <select id="institutionSelect" multiple class="w-full"></select>
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider pl-1">Principal
+                                Investigator</label>
+                            <select id="piSelect" multiple class="w-full"></select>
                         </div>
                     </div>
-                    <div id="aiProgress" class="ai-progress hidden">
-                        <div class="progress-info">
-                            <span id="aiStatusText">AI 모델 로딩 중...</span>
-                            <span id="aiProgressPercent">0%</span>
+
+                    <!-- Keywords & AI Toggle -->
+                    <div class="mb-8">
+                        <label
+                            class="text-xs font-semibold text-slate-500 uppercase tracking-wider pl-1 mb-2 block">Keywords
+                            Search</label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            <input type="text" id="keywordInput"
+                                class="block w-full pl-10 pr-32 py-3 border border-slate-200 rounded-xl leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-sm"
+                                placeholder="Search by topic, title, or abstract...">
+
+                            <!-- AI Toggle Switch -->
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <span class="mr-3 text-xs font-semibold text-slate-500">AI Search</span>
+                                    <div class="relative">
+                                        <input type="checkbox" id="aiSearchToggle" class="sr-only peer">
+                                        <div
+                                            class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
-                        <div class="progress-bar-bg">
-                            <div id="aiProgressBar" class="progress-bar-fill"></div>
+                        <!-- AI Progress -->
+                        <div id="aiProgress" class="hidden mt-3 max-w-xl mx-auto">
+                            <div class="flex justify-between text-xs font-semibold text-indigo-600 mb-1">
+                                <span id="aiStatusText">Initializing AI Model...</span>
+                                <span id="aiProgressPercent">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                <div id="aiProgressBar"
+                                    class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300"
+                                    style="width: 0%"></div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="filter-row">
-                <div class="filter-group">
-                    <label>과제 상태</label>
-                    <div class="checkbox-group" id="statusFilters"></div>
-                </div>
+                    <!-- Filter Row -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6 border-t border-slate-100">
+                        <!-- Status Filters -->
+                        <div class="lg:col-span-5 space-y-3">
+                            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Project
+                                Status</label>
+                            <div id="statusFilters" class="flex flex-wrap gap-2 text-sm">
+                                <!-- Checkboxes will be injected here by JS -->
+                            </div>
+                        </div>
 
-                <div class="filter-group">
-                    <label>시작일 범위</label>
-                    <div class="date-range">
-                        <input type="text" id="dateFrom" placeholder="시작">
-                        <span>~</span>
-                        <input type="text" id="dateTo" placeholder="종료">
+                        <!-- Date Range -->
+                        <div class="lg:col-span-3 space-y-3">
+                            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Start
+                                Date</label>
+                            <div class="flex items-center gap-2">
+                                <input type="text" id="dateFrom"
+                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="From">
+                                <span class="text-slate-400">-</span>
+                                <input type="text" id="dateTo"
+                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="To">
+                            </div>
+                        </div>
+
+                        <!-- Duration -->
+                        <div class="lg:col-span-4 space-y-3">
+                            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Duration
+                                (Months)</label>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="durationMin"
+                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="Min" min="0">
+                                <span class="text-slate-400">-</span>
+                                <input type="number" id="durationMax"
+                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="Max" min="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Footer -->
+                    <div
+                        class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 pt-6 border-t border-slate-100">
+                        <button id="resetBtn"
+                            class="text-slate-500 hover:text-slate-800 text-sm font-medium flex items-center transition-colors">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                </path>
+                            </svg>
+                            Reset Filters
+                        </button>
+                        <div class="flex gap-3 w-full sm:w-auto">
+                            <button id="exportCsvBtn"
+                                class="flex-1 sm:flex-none px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-sm">
+                                Export CSV
+                            </button>
+                            <button id="exportExcelBtn"
+                                class="flex-1 sm:flex-none px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-sm transition-colors">
+                                Export Excel
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Results Header & Sort -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-2">
+                    <span id="resultsCount" class="text-slate-500 font-medium text-sm">Loading...</span>
+
+                    <div class="flex items-center gap-2">
+                        <label for="sortSelect"
+                            class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sort By</label>
+                        <select id="sortSelect"
+                            class="pl-3 pr-8 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm appearance-none cursor-pointer">
+                            <option value="date-desc">Start Date (Newest)</option>
+                            <option value="date-asc">Start Date (Oldest)</option>
+                            <option value="title-asc">Title (A-Z)</option>
+                            <option value="status-asc">Status</option>
+                            <option value="pi-asc">PI Name</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="filter-group">
-                    <label>수행기간 (개월)</label>
-                    <div class="duration-range">
-                        <input type="number" id="durationMin" placeholder="최소" min="0">
-                        <span>~</span>
-                        <input type="number" id="durationMax" placeholder="최대" min="0">
+                <!-- Charts Section -->
+                <section id="chartsSection" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Word Cloud -->
+                    <div id="wordCloudContainer"
+                        class="chart-container bg-white p-5 rounded-2xl shadow-sm border border-slate-100/60 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer h-72">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Top Keywords</h3>
+                        <div id="wordCloud" class="w-full h-[calc(100%-24px)] flex items-center justify-center"></div>
                     </div>
-                </div>
+                    <!-- Bar Chart -->
+                    <div
+                        class="chart-container bg-white p-5 rounded-2xl shadow-sm border border-slate-100/60 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer h-72">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">By Institution</h3>
+                        <div class="h-[calc(100%-24px)] relative"><canvas id="barChart"></canvas></div>
+                    </div>
+                    <!-- Line Chart -->
+                    <div
+                        class="chart-container bg-white p-5 rounded-2xl shadow-sm border border-slate-100/60 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer h-72">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Timeline Trend</h3>
+                        <div class="h-[calc(100%-24px)] relative"><canvas id="lineChart"></canvas></div>
+                    </div>
+                    <!-- Pie Chart -->
+                    <div
+                        class="chart-container bg-white p-5 rounded-2xl shadow-sm border border-slate-100/60 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer h-72">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Status Distribution
+                        </h3>
+                        <div class="h-[calc(100%-24px)] relative"><canvas id="pieChart"></canvas></div>
+                    </div>
+                </section>
+
+                <!-- Results Grid Section -->
+                <section class="">
+                    <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <!-- JS populate cards -->
+                    </div>
+
+                    <!-- Pagination -->
+                    <div id="pagination"
+                        class="flex justify-center items-center gap-2 mt-8 pt-6 border-t border-slate-100">
+                    </div>
+                </section>
+
+                <!-- Network Graph Section -->
+                <section id="networkSection" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800">Network Visualization</h3>
+                            <p class="text-sm text-slate-500">Connections between researches, institutions, and topics
+                            </p>
+                        </div>
+                        <button id="toggleGraphBtn" onclick="toggleDashboardGraph()"
+                            class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                            Generate Graph
+                        </button>
+                    </div>
+
+                    <p id="dashboardCapMsg" class="text-amber-500 font-medium text-sm text-center mb-4 hidden"></p>
+
+                    <div id="dashboardViz"
+                        class="w-full h-[600px] border border-slate-100 rounded-xl bg-slate-50/50 hidden"></div>
+
+                    <div id="dashboardLegend" class="flex flex-wrap gap-3 justify-center mt-6 hidden">
+                        <div class="legend-item flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium cursor-pointer hover:bg-blue-100 transition-colors"
+                            data-type="Institution" onclick="toggleLegendType('Institution')">
+                            <div class="w-2.5 h-2.5 rounded-full bg-blue-400"></div> Institution
+                        </div>
+                        <div class="legend-item flex items-center gap-2 px-3 py-1.5 bg-violet-50 text-violet-700 rounded-full text-xs font-medium cursor-pointer hover:bg-violet-100 transition-colors"
+                            data-type="Project" onclick="toggleLegendType('Project')">
+                            <div class="w-2.5 h-2.5 rounded-full bg-violet-400"></div> Project
+                        </div>
+                        <div class="legend-item flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full text-xs font-medium cursor-pointer hover:bg-amber-100 transition-colors"
+                            data-type="Person" onclick="toggleLegendType('Person')">
+                            <div class="w-2.5 h-2.5 rounded-full bg-amber-400"></div> Researcher
+                        </div>
+                        <div class="legend-item flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-xs font-medium cursor-pointer hover:bg-green-100 transition-colors"
+                            data-type="Topic" onclick="toggleLegendType('Topic')">
+                            <div class="w-2.5 h-2.5 rounded-full bg-green-400"></div> Topic
+                        </div>
+                    </div>
+
+                    <div id="dashboardGraphControls" class="hidden flex justify-center gap-3 mt-4">
+                        <button onclick="fitDashboardGraph()"
+                            class="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-200 transition-colors">Fit
+                            Review</button>
+                    </div>
+                    <div id="dashboardNodePopup"></div>
+                </section>
             </div>
 
-            <div class="action-row">
-                <button id="resetBtn" class="btn btn-secondary">필터 초기화</button>
-                <div class="export-buttons">
-                    <button id="exportCsvBtn" class="btn btn-primary">CSV 다운로드</button>
-                    <button id="exportExcelBtn" class="btn btn-primary">Excel 다운로드</button>
-                </div>
-            </div>
-        </section>
+            <!-- VIEW 2: Researcher Matcher -->
+            <div id="view-matcher" class="view-section hidden">
+                <section
+                    class="bg-white rounded-2xl shadow-sm border border-purple-100 p-8 min-h-[600px] relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-purple-500 to-indigo-500"></div>
 
-        <!-- Results Count -->
-        <section class="results-info">
-            <span id="resultsCount">로딩 중...</span>
-        </section>
+                    <div class="max-w-3xl mx-auto">
+                        <div class="mb-8 text-center sm:text-left">
+                            <h2 class="text-2xl font-bold text-slate-900 mb-3">
+                                🇰🇷 KR Researcher - 🇸🇬 SG Grant Matching
+                            </h2>
+                            <p class="text-slate-500 leading-relaxed">
+                                Enter a Korean Researcher (R-Card) URL. AI will analyze their research field and
+                                recommend Singaporean grants for potential collaboration.
+                            </p>
+                        </div>
 
-        <!-- Charts Section -->
-        <section class="charts-section" id="chartsSection">
-            <div class="chart-container wordcloud-container" id="wordCloudContainer">
-                <h3>Top 연구 키워드</h3>
-                <div id="wordCloud"></div>
-            </div>
-            <div class="chart-container">
-                <h3>기관별 과제 수</h3>
-                <canvas id="barChart"></canvas>
-            </div>
-            <div class="chart-container">
-                <h3>연도별 과제 추이</h3>
-                <canvas id="lineChart"></canvas>
-            </div>
-            <div class="chart-container">
-                <h3>상태별 분포</h3>
-                <canvas id="pieChart"></canvas>
-            </div>
-        </section>
+                        <div class="flex flex-col sm:flex-row gap-3 mb-10">
+                            <input type="text" id="matchUrl"
+                                placeholder="R-Card URL (e.g., https://rcard.re.kr/detail/KP-...)"
+                                class="flex-1 p-4 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all shadow-sm">
+                            <button id="matchBtn"
+                                class="bg-purple-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-purple-700 shadow-md hover:shadow-lg transition-all active:scale-95">
+                                Start Matching
+                            </button>
+                        </div>
 
-        <!-- Word Cloud Modal -->
-        <div class="modal" id="wordCloudModal">
-            <div class="modal-content chart-modal-content">
-                <button class="modal-close" id="wordCloudModalClose">&times;</button>
-                <h2>Top 연구 키워드</h2>
-                <div class="chart-modal-container" id="modalWordCloud"></div>
-            </div>
-        </div>
+                        <!-- Researcher Info -->
+                        <div id="researcherInfo"
+                            class="hidden bg-fuchsia-50 border border-fuchsia-100 rounded-xl p-6 mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div>
+                                <h3 id="rName" class="text-lg font-bold text-slate-900"></h3>
+                                <p id="rAffiliation" class="text-slate-600 mt-1"></p>
+                            </div>
+                            <a id="rLink" href="#" target="_blank"
+                                class="px-4 py-2 bg-white border border-fuchsia-200 text-fuchsia-700 rounded-lg text-sm font-medium hover:bg-fuchsia-100 transition-colors">
+                                View Profile ↗
+                            </a>
+                        </div>
 
-        <!-- Results Table -->
-        <section class="table-section">
-            <div class="table-wrapper">
-                <table id="resultsTable">
-                    <thead>
-                        <tr>
-                            <th data-sort="id">과제번호 <span class="sort-icon"></span></th>
-                            <th data-sort="title">과제명 <span class="sort-icon"></span></th>
-                            <th data-sort="status">상태 <span class="sort-icon"></span></th>
-                            <th data-sort="pi">과제책임자 <span class="sort-icon"></span></th>
-                            <th data-sort="inst">수행기관 <span class="sort-icon"></span></th>
-                            <th data-sort="date">시작일 <span class="sort-icon"></span></th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
+                        <h3 class="text-lg font-bold text-slate-700 border-b border-slate-100 pb-3 mb-6">Matching
+                            Results (Top 20)</h3>
+                        <div id="matchResults" class="space-y-4"></div>
+                    </div>
+                </section>
             </div>
 
-            <!-- Pagination -->
-            <div class="pagination" id="pagination"></div>
-        </section>
+        </main>
 
         <!-- Loading Overlay -->
-        <div class="loading-overlay" id="loadingOverlay">
-            <div class="spinner"></div>
-            <p>데이터 로딩 중...</p>
+        <div id="loadingOverlay"
+            class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm">
+            <div class="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+            <p class="text-indigo-600 font-medium animate-pulse">Loading IGMS Data...</p>
         </div>
 
         <!-- Detail Modal -->
-        <div class="modal" id="detailModal">
-            <div class="modal-content">
-                <button class="modal-close" id="modalClose">&times;</button>
-                <div id="modalBody"></div>
+        <div id="detailModal" class="modal fixed inset-0 z-[60] hidden">
+            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0"
+                id="detailModalBackdrop"></div>
+            <div
+                class="modal-content relative bg-white w-full max-w-4xl m-4 md:m-auto rounded-2xl shadow-2xl p-0 opacity-0 transform translate-y-4 scale-95 transition-all duration-300 max-h-[90vh] flex flex-col">
+                <div
+                    class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-2xl">
+                    <h2 class="text-lg font-bold text-slate-800">Project Details</h2>
+                    <button id="modalClose" class="text-slate-400 hover:text-slate-600 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div id="modalBody" class="p-6 overflow-y-auto">
+                    <!-- Content injected by JS -->
+                </div>
             </div>
         </div>
 
         <!-- Chart Modal -->
-        <div class="modal" id="chartModal">
-            <div class="modal-content chart-modal-content">
-                <button class="modal-close" id="chartModalClose">&times;</button>
-                <h2 id="chartModalTitle"></h2>
-                <div class="chart-modal-container">
+        <div id="chartModal" class="modal fixed inset-0 z-[60] hidden">
+            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+            <div
+                class="modal-content relative bg-white w-full max-w-5xl m-4 md:m-auto rounded-2xl shadow-2xl p-6 max-h-[90vh] flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 id="chartModalTitle" class="text-xl font-bold text-slate-800"></h2>
+                    <button id="chartModalClose" class="text-slate-400 hover:text-slate-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="chart-modal-container flex-1 min-h-[400px]">
                     <canvas id="modalChart"></canvas>
                 </div>
             </div>
         </div>
+
+        <!-- Word Cloud Modal -->
+        <div id="wordCloudModal" class="modal fixed inset-0 z-[60] hidden">
+            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+            <div
+                class="modal-content relative bg-white w-full max-w-5xl m-4 md:m-auto rounded-2xl shadow-2xl p-6 max-h-[90vh] flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-slate-800">Top Research Keywords</h2>
+                    <button id="wordCloudModalClose" class="text-slate-400 hover:text-slate-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div id="modalWordCloud"
+                    class="chart-modal-container flex-1 min-h-[500px] flex items-center justify-center"></div>
+            </div>
+        </div>
+
     </div>
+
+    <!-- vis-network -->
+    <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
 
     <!-- JS Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/scripts/choices.min.js"></script>
@@ -225,11 +472,15 @@
     <script src="https://cdn.jsdelivr.net/npm/d3-cloud@1.2.5/build/d3.layout.cloud.min.js"></script>
 
     <!-- Auth JS -->
-    <script src="js/auth.js?v=2"></script>
+    <script src="/dashboard/js/auth.js?v=2"></script>
+
+    <!-- Dashboard Graph -->
+    <script src="/dashboard/js/dashboard-graph.js?v=5"></script>
 
     <!-- Custom JS -->
-    <script type="module" src="js/ai-search.js?v=2"></script>
-    <script src="js/app.js?v=2"></script>
+    <script type="module" src="/dashboard/js/ai-search.js?v=2"></script>
+    <script type="module" src="/dashboard/js/matcher.js?v=1"></script>
+    <script src="/dashboard/js/app.js?v=6"></script>
 </body>
 
 </html>

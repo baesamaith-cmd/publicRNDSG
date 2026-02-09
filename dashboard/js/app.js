@@ -4,7 +4,7 @@
 let allProjects = [];
 let filteredProjects = [];
 let currentPage = 1;
-const itemsPerPage = 30;
+const itemsPerPage = 10;
 
 // Sort State
 let currentSort = { field: 'date', order: 'desc' };
@@ -72,80 +72,37 @@ const institutionAbbreviations = {
     'Housing & Development Board': 'HDB'
 };
 
+// --- Helper Functions (Hoisted) ---
+
+// Debounce Utility
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
 // Get abbreviated institution name for chart display
 function getInstitutionAbbr(fullName) {
     if (!fullName) return '';
-
-    // Check if abbreviation exists in mapping
     if (institutionAbbreviations[fullName]) {
         return institutionAbbreviations[fullName];
     }
-
-    // Check if name already contains abbreviation pattern (e.g., "GIS - Genome Institute of Singapore")
     const match = fullName.match(/^([A-Z0-9]+)\s*-\s*(.+)$/);
     if (match) {
         return match[1];
     }
-
-    // Return original name if no abbreviation
     return fullName;
-}
-
-// Initialize Application - called from auth.js after login
-async function initApp() {
-    await loadData();
-    initializeUI();
-    applyFilters();
-}
-
-// API Configuration
-const API_URL = 'https://searchsgpartners.netlify.app/.netlify/functions/data';
-
-// Load Data from Netlify API (production) or local JSON (development)
-async function loadData() {
-    try {
-        // Get password from sessionStorage (set by auth.js)
-        const password = sessionStorage.getItem('igms_password');
-
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            // Local development - use JSON file
-            const response = await fetch('data/projects.json');
-            allProjects = await response.json();
-        } else {
-            // Production - fetch from Vercel API with password
-            const response = await fetch(API_URL, {
-                headers: {
-                    'Authorization': `Bearer ${password}`
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`API error: ${response.status}`);
-            }
-
-            allProjects = await response.json();
-        }
-
-        // Parse dates for sorting
-        allProjects.forEach(p => {
-            p.dateObj = parseDate(p.date);
-            p.durNum = parseInt(p.dur) || 0;
-        });
-
-        // Sort by date descending (default)
-        sortProjects('date', 'desc');
-
-        document.getElementById('loadingOverlay').classList.add('hidden');
-    } catch (error) {
-        console.error('Error loading data:', error);
-        document.getElementById('loadingOverlay').innerHTML = '<p>데이터 로딩 오류. 페이지를 새로고침 해주세요.</p>';
-    }
 }
 
 // Parse date string to Date object
 function parseDate(dateStr) {
     if (!dateStr) return new Date(0);
-    // Format: "21-Feb-2026" or similar
     const parts = dateStr.split('-');
     if (parts.length === 3) {
         const months = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
@@ -157,21 +114,96 @@ function parseDate(dateStr) {
     return new Date(dateStr);
 }
 
+// --- Main Initialization ---
+
+document.addEventListener('DOMContentLoaded', () => {
+    // auth.js may have already called initApp() if session is pre-authenticated,
+    // but if it hasn't loaded yet (initApp not defined at that time), we call it here.
+    if (allProjects.length === 0 && document.getElementById('mainContainer')?.style.display === 'block') {
+        initApp();
+    }
+
+    // Navigation Logic
+    const navItems = document.querySelectorAll('.nav-item');
+    const viewSections = document.querySelectorAll('.view-section');
+
+    if (navItems.length > 0) {
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                if (item.tagName === 'A') return;
+                navItems.forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+                const targetId = item.getAttribute('data-target');
+                viewSections.forEach(section => {
+                    if (section.id === targetId) {
+                        section.classList.remove('hidden');
+                        // Matcher no longer needs browser-side ML model
+                        // (uses pre-computed embeddings from crawl_rcard.py)
+                    } else {
+                        section.classList.add('hidden');
+                    }
+                });
+            });
+        });
+    }
+});
+
+// Initialize Application - called from auth.js after login
+async function initApp() {
+    await loadData();
+    initializeUI();
+    applyFilters();
+}
+
+// API Configuration
+const API_URL = 'https://searchsgpartners.netlify.app/.netlify/functions/data';
+
+// Load Data
+async function loadData() {
+    try {
+        const password = sessionStorage.getItem('igms_password');
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            const response = await fetch('/dashboard/data/projects.json');
+            allProjects = await response.json();
+        } else {
+            const response = await fetch(API_URL, {
+                headers: { 'Authorization': `Bearer ${password}` }
+            });
+            if (!response.ok) throw new Error(`API error: ${response.status}`);
+            allProjects = await response.json();
+        }
+
+        allProjects.forEach(p => {
+            p.dateObj = parseDate(p.date);
+            p.durNum = parseInt(p.dur) || 0;
+        });
+
+        sortProjects('date', 'desc');
+
+        window.allProjects = allProjects;
+        if (window.initMatcher) {
+            window.initMatcher(allProjects);
+        }
+
+        document.getElementById('loadingOverlay').classList.add('hidden');
+    } catch (error) {
+        console.error('Error loading data:', error);
+        document.getElementById('loadingOverlay').innerHTML = '<p>데이터 로딩 오류. 페이지를 새로고침 해주세요.</p>';
+    }
+}
+
 // Initialize UI Components
 function initializeUI() {
     initSelects();
     initStatusFilters();
     initDatePickers();
-    initEventListeners();
-    initCharts();
-
-    // Set initial sort UI (default: date descending)
+    initCharts(); // Initialize Charts specifically
+    initEventListeners(); // Attach all listeners
     updateSortUI(currentSort.field, currentSort.order);
 }
 
 // Initialize Choices.js selects
 function initSelects() {
-    // Get unique institutions
     const institutions = [...new Set(allProjects.map(p => p.inst).filter(Boolean))].sort();
     const institutionOptions = institutions.map(i => ({ value: i, label: i }));
 
@@ -181,10 +213,10 @@ function initSelects() {
         placeholderValue: '수행기관 선택...',
         searchPlaceholderValue: '기관명 검색...',
         choices: institutionOptions,
-        shouldSort: false
+        shouldSort: false,
+        allowHTML: true // Fix deprecation warning
     });
 
-    // Get unique PIs
     const pis = [...new Set(allProjects.map(p => p.pi).filter(Boolean))].sort();
     const piOptions = pis.map(p => ({ value: p, label: p }));
 
@@ -194,21 +226,20 @@ function initSelects() {
         placeholderValue: '과제책임자 선택...',
         searchPlaceholderValue: 'PI 검색...',
         choices: piOptions,
-        shouldSort: false
+        shouldSort: false,
+        allowHTML: true // Fix deprecation warning
     });
 }
 
-// Update PI Options based on selected institutions
+// Update PI Options
 function updatePIOptions() {
     const selectedInstitutions = institutionSelect.getValue(true);
     const currentSelectedPIs = piSelect.getValue(true);
 
     let availablePIs;
     if (selectedInstitutions.length === 0) {
-        // No institution selected - show all PIs
         availablePIs = [...new Set(allProjects.map(p => p.pi).filter(Boolean))].sort();
     } else {
-        // Filter PIs by selected institutions
         availablePIs = [...new Set(
             allProjects
                 .filter(p => selectedInstitutions.includes(p.inst))
@@ -217,7 +248,6 @@ function updatePIOptions() {
         )].sort();
     }
 
-    // Clear and rebuild PI choices
     piSelect.clearStore();
     piSelect.setChoices(
         availablePIs.map(p => ({ value: p, label: p })),
@@ -226,7 +256,6 @@ function updatePIOptions() {
         true
     );
 
-    // Restore previously selected PIs that are still valid
     const validSelectedPIs = currentSelectedPIs.filter(pi => availablePIs.includes(pi));
     validSelectedPIs.forEach(pi => {
         piSelect.setChoiceByValue(pi);
@@ -237,7 +266,7 @@ function updatePIOptions() {
 function initStatusFilters() {
     const statuses = [...new Set(allProjects.map(p => p.status).filter(Boolean))].sort();
     const container = document.getElementById('statusFilters');
-
+    container.innerHTML = ''; // Clear existing
     statuses.forEach(status => {
         const label = document.createElement('label');
         label.innerHTML = `
@@ -258,156 +287,6 @@ function initDatePickers() {
     flatpickr('#dateTo', {
         dateFormat: 'Y-m-d',
         onChange: debounce(applyFilters, 300)
-    });
-}
-
-// Initialize Event Listeners
-function initEventListeners() {
-    // Debounced filter function
-    const debouncedApplyFilters = debounce(applyFilters, 300);
-
-    // Select changes
-    document.getElementById('institutionSelect').addEventListener('change', () => {
-        updatePIOptions();
-        applyFilters();
-    });
-    document.getElementById('piSelect').addEventListener('change', debouncedApplyFilters);
-
-    // Keyword input
-    document.getElementById('keywordInput').addEventListener('input', debounce(applyFilters, 500)); // Increased debounce for AI
-
-    // AI Toggle
-    document.getElementById('aiSearchToggle').addEventListener('change', async (e) => {
-        if (e.target.checked) {
-            // Initial Load
-            if (window.initAISearch) {
-                const success = await window.initAISearch();
-                if (!success) {
-                    e.target.checked = false; // Revert if failed
-                    alert('AI 모델 로드에 실패했습니다.');
-                    return;
-                }
-                applyFilters(); // Re-run search with AI
-            }
-        } else {
-            document.getElementById('aiProgress').classList.add('hidden');
-            applyFilters(); // Re-run search without AI
-        }
-    });
-
-    // Status checkboxes
-    document.getElementById('statusFilters').addEventListener('change', applyFilters);
-
-    // Duration inputs
-    document.getElementById('durationMin').addEventListener('input', debounce(applyFilters, 300));
-    document.getElementById('durationMax').addEventListener('input', debounce(applyFilters, 300));
-
-    // Reset button
-    document.getElementById('resetBtn').addEventListener('click', resetFilters);
-
-    // Export buttons
-    document.getElementById('exportCsvBtn').addEventListener('click', exportToCSV);
-    document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
-
-    // Table header sort
-    document.querySelectorAll('#resultsTable th[data-sort]').forEach(th => {
-        th.addEventListener('click', () => {
-            const field = th.dataset.sort;
-            const order = currentSort.field === field && currentSort.order === 'asc' ? 'desc' : 'asc';
-            sortProjects(field, order);
-            updateSortUI(field, order);
-            renderTable();
-        });
-    });
-
-    // Modal close
-    document.getElementById('modalClose').addEventListener('click', closeModal);
-    document.getElementById('detailModal').addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) closeModal();
-    });
-
-    // Chart modal close
-    document.getElementById('chartModalClose').addEventListener('click', closeChartModal);
-    document.getElementById('chartModal').addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) closeChartModal();
-    });
-
-    // Word cloud modal close
-    document.getElementById('wordCloudModalClose').addEventListener('click', closeWordCloudModal);
-    document.getElementById('wordCloudModal').addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) closeWordCloudModal();
-    });
-
-    // Chart containers: data click = filter, white space click = modal
-    // Bar chart container
-    document.querySelector('#barChart').closest('.chart-container').addEventListener('click', (e) => {
-        const container = e.currentTarget;
-        const title = container.querySelector('h3').textContent;
-
-        // If clicking on canvas, check if bar was clicked
-        if (e.target.tagName === 'CANVAS') {
-            const chart = barChart;
-            const elements = chart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, false);
-            if (elements.length === 0) {
-                openChartModal('barChart', title);
-            }
-        }
-        // If clicking on container itself (white space) or h3
-        else if (e.target === container || e.target.tagName === 'H3') {
-            openChartModal('barChart', title);
-        }
-    });
-
-    // Line chart container
-    document.querySelector('#lineChart').closest('.chart-container').addEventListener('click', (e) => {
-        const container = e.currentTarget;
-        const title = container.querySelector('h3').textContent;
-
-        if (e.target.tagName === 'CANVAS') {
-            const chart = lineChart;
-            const elements = chart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, false);
-            if (elements.length === 0) {
-                openChartModal('lineChart', title);
-            }
-        }
-        else if (e.target === container || e.target.tagName === 'H3') {
-            openChartModal('lineChart', title);
-        }
-    });
-
-    // Pie chart container
-    document.querySelector('#pieChart').closest('.chart-container').addEventListener('click', (e) => {
-        const container = e.currentTarget;
-        const title = container.querySelector('h3').textContent;
-
-        if (e.target.tagName === 'CANVAS') {
-            const chart = pieChart;
-            const elements = chart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, false);
-            if (elements.length === 0) {
-                openChartModal('pieChart', title);
-            }
-        }
-        else if (e.target === container || e.target.tagName === 'H3') {
-            openChartModal('pieChart', title);
-        }
-    });
-
-    // Word cloud: keywords click = filter, white space/title click = modal
-    document.getElementById('wordCloudContainer').addEventListener('click', (e) => {
-        const container = e.currentTarget;
-        // Open modal if clicking on white space, title, or container (not on a keyword)
-        if (e.target.tagName !== 'text' && !e.target.closest('text')) {
-            openWordCloudModal();
-        }
-    });
-
-    // Escape key to close modal
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            closeModal();
-            closeChartModal();
-            closeWordCloudModal();
-        }
     });
 }
 
@@ -487,6 +366,123 @@ function initCharts() {
             }
         }
     });
+
+    // Chart Events - Click on container for modal
+    document.querySelector('#barChart').closest('.chart-container').addEventListener('click', (e) => {
+        const container = e.currentTarget;
+        const title = container.querySelector('h3').textContent;
+        // Check if NOT clicking on canvas (or if chart click didn't catch it)
+        if (e.target.tagName !== 'CANVAS' || !barChart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, false).length) {
+            if (e.target === container || e.target.tagName === 'H3' || e.target.tagName === 'CANVAS') {
+                openChartModal('barChart', title);
+            }
+        }
+    });
+
+    // Line chart container
+    document.querySelector('#lineChart').closest('.chart-container').addEventListener('click', (e) => {
+        const container = e.currentTarget;
+        const title = container.querySelector('h3').textContent;
+        if (e.target.tagName !== 'CANVAS' || !lineChart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, false).length) {
+            openChartModal('lineChart', title);
+        }
+    });
+
+    // Pie chart container
+    document.querySelector('#pieChart').closest('.chart-container').addEventListener('click', (e) => {
+        const container = e.currentTarget;
+        const title = container.querySelector('h3').textContent;
+        if (e.target.tagName !== 'CANVAS' || !pieChart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, false).length) {
+            openChartModal('pieChart', title);
+        }
+    });
+}
+
+
+// Initialize Event Listeners
+function initEventListeners() {
+    const debouncedApplyFilters = debounce(applyFilters, 300);
+
+    // Select changes
+    document.getElementById('institutionSelect').addEventListener('change', () => {
+        updatePIOptions();
+        applyFilters();
+    });
+    document.getElementById('piSelect').addEventListener('change', debouncedApplyFilters);
+
+    // Keyword input
+    document.getElementById('keywordInput').addEventListener('input', debounce(applyFilters, 500));
+
+    // AI Toggle
+    document.getElementById('aiSearchToggle').addEventListener('change', async (e) => {
+        if (e.target.checked) {
+            if (window.initAISearch) {
+                const success = await window.initAISearch('dashboard');
+                if (!success) {
+                    e.target.checked = false;
+                    alert('AI 모델 로드에 실패했습니다.');
+                    return;
+                }
+                applyFilters();
+            }
+        } else {
+            document.getElementById('aiProgress').classList.add('hidden');
+            applyFilters();
+        }
+    });
+
+    // Status checkboxes
+    document.getElementById('statusFilters').addEventListener('change', applyFilters);
+
+    // Duration inputs
+    document.getElementById('durationMin').addEventListener('input', debounce(applyFilters, 300));
+    document.getElementById('durationMax').addEventListener('input', debounce(applyFilters, 300));
+
+    // Reset button
+    document.getElementById('resetBtn').addEventListener('click', resetFilters);
+
+    // Export buttons
+    document.getElementById('exportCsvBtn').addEventListener('click', exportToCSV);
+    document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+
+    // Sort Dropdown
+    document.getElementById('sortSelect').addEventListener('change', (e) => {
+        const [field, order] = e.target.value.split('-');
+        sortProjects(field, order);
+        renderCards();
+    });
+
+    // Modals
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+    document.getElementById('detailModal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeModal();
+    });
+
+    document.getElementById('chartModalClose').addEventListener('click', closeChartModal);
+    document.getElementById('chartModal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeChartModal();
+    });
+
+    document.getElementById('wordCloudModalClose').addEventListener('click', closeWordCloudModal);
+    document.getElementById('wordCloudModal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeWordCloudModal();
+    });
+
+    // Word Cloud Container
+    document.getElementById('wordCloudContainer').addEventListener('click', (e) => {
+        if (e.target.tagName !== 'text' && !e.target.closest('text')) {
+            openWordCloudModal();
+        }
+    });
+
+    // Keyboard
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeModal();
+            closeChartModal();
+            closeWordCloudModal();
+        }
+    });
 }
 
 // Apply Filters
@@ -502,97 +498,62 @@ async function applyFilters() {
 
     // AI Search Check
     const isAIEnabled = document.getElementById('aiSearchToggle').checked;
-    let semanticScores = {}; // Map: id -> score
+    let semanticScores = {};
 
     if (isAIEnabled && keywords.length > 0) {
-        const query = document.getElementById('keywordInput').value; // Get raw input
-        // Use global window function
+        const query = document.getElementById('keywordInput').value;
         if (window.searchSemantic) {
-            const results = await window.searchSemantic(query, allProjects, 100);
-            // Create map for O(1) lookup
+            const results = await window.searchSemantic(query, allProjects, 100, 'dashboard');
             results.forEach(r => semanticScores[r.id] = r.score);
-
-            // If no results from AI (e.g. model not ready or short query), rely on keyword match only?
-            // For now, if AI is enabled, we ONLY show AI matches (intersection with other filters)
-            // But if query is too short, we might fallback.
         }
     }
 
     filteredProjects = allProjects.filter(p => {
-        // Institution filter
-        if (selectedInstitutions.length > 0 && !selectedInstitutions.includes(p.inst)) {
-            return false;
-        }
+        if (selectedInstitutions.length > 0 && !selectedInstitutions.includes(p.inst)) return false;
+        if (selectedPIs.length > 0 && !selectedPIs.includes(p.pi)) return false;
 
-        // PI filter
-        if (selectedPIs.length > 0 && !selectedPIs.includes(p.pi)) {
-            return false;
-        }
-
-        // Search Filter (Keyword OR AI)
         if (keywords.length > 0) {
             if (isAIEnabled && Object.keys(semanticScores).length > 0) {
-                // AI Mode: Must be in semantic results
                 if (!semanticScores[p.id]) return false;
-                // Add score to project object for sorting (temporary)
                 p._aiScore = semanticScores[p.id];
             } else {
-                // Classic Keyword Mode (AND logic)
                 const searchText = `${p.abs || ''} ${p.kw || ''} ${p.title || ''}`.toLowerCase();
-                if (!keywords.every(kw => searchText.includes(kw))) {
-                    return false;
-                }
+                if (!keywords.every(kw => searchText.includes(kw))) return false;
             }
         }
 
-        // Status filter
-        if (selectedStatuses.length > 0 && !selectedStatuses.includes(p.status)) {
-            return false;
-        }
-
-        // Date filter
-        if (dateFrom && p.dateObj < new Date(dateFrom)) {
-            return false;
-        }
-        if (dateTo && p.dateObj > new Date(dateTo)) {
-            return false;
-        }
-
-        // Duration filter
-        if (p.durNum < durationMin || p.durNum > durationMax) {
-            return false;
-        }
+        if (selectedStatuses.length > 0 && !selectedStatuses.includes(p.status)) return false;
+        if (dateFrom && p.dateObj < new Date(dateFrom)) return false;
+        if (dateTo && p.dateObj > new Date(dateTo)) return false;
+        if (p.durNum < durationMin || p.durNum > durationMax) return false;
 
         return true;
     });
 
-    // If AI Search, sort by Score
     if (isAIEnabled && keywords.length > 0) {
         filteredProjects.sort((a, b) => (b._aiScore || 0) - (a._aiScore || 0));
-        // Update Sort UI to show "Relevant" (custom)
-        // We'll just plain clear the sort icons for now
         document.querySelectorAll('#resultsTable th').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
     } else {
-        // Re-apply current sort if switching back
-        // But only if we didn't just AI sort
         if (filteredProjects.length > 0 && !filteredProjects[0]._aiScore) {
-            // Basic sort maintain
             const th = document.querySelector(`#resultsTable th.sort-asc, #resultsTable th.sort-desc`);
             if (th) {
                 const field = th.dataset.sort;
                 const order = th.classList.contains('sort-asc') ? 'asc' : 'desc';
                 sortProjects(field, order);
             } else {
-                // Default date desc
                 sortProjects('date', 'desc');
             }
         }
     }
 
     currentPage = 1;
-    renderTable();
+    currentPage = 1;
+    renderCards();
     updateCharts();
     updateResultsCount();
+
+    // Update dashboard network graph
+    if (typeof updateDashboardGraph === 'function') updateDashboardGraph(filteredProjects);
 }
 
 // Sort Projects
@@ -601,7 +562,6 @@ function sortProjects(field, order) {
 
     filteredProjects.sort((a, b) => {
         let valA, valB;
-
         if (field === 'date') {
             valA = a.dateObj;
             valB = b.dateObj;
@@ -612,7 +572,6 @@ function sortProjects(field, order) {
             valA = (a[field] || '').toLowerCase();
             valB = (b[field] || '').toLowerCase();
         }
-
         if (valA < valB) return order === 'asc' ? -1 : 1;
         if (valA > valB) return order === 'asc' ? 1 : -1;
         return 0;
@@ -621,8 +580,8 @@ function sortProjects(field, order) {
     // Also sort allProjects if it's the initial sort
     if (filteredProjects === allProjects || filteredProjects.length === allProjects.length) {
         allProjects.sort((a, b) => {
+            // ... same logic for allProjects ...
             let valA, valB;
-
             if (field === 'date') {
                 valA = a.dateObj;
                 valB = b.dateObj;
@@ -633,7 +592,6 @@ function sortProjects(field, order) {
                 valA = (a[field] || '').toLowerCase();
                 valB = (b[field] || '').toLowerCase();
             }
-
             if (valA < valB) return order === 'asc' ? -1 : 1;
             if (valA > valB) return order === 'asc' ? 1 : -1;
             return 0;
@@ -643,48 +601,67 @@ function sortProjects(field, order) {
 
 // Update Sort UI
 function updateSortUI(field, order) {
-    document.querySelectorAll('#resultsTable th').forEach(th => {
-        th.classList.remove('sort-asc', 'sort-desc');
-    });
-    const th = document.querySelector(`#resultsTable th[data-sort="${field}"]`);
-    if (th) {
-        th.classList.add(order === 'asc' ? 'sort-asc' : 'sort-desc');
+    const select = document.getElementById('sortSelect');
+    if (select) {
+        select.value = `${field}-${order}`;
     }
 }
 
-// Render Table
-function renderTable() {
-    const tbody = document.getElementById('tableBody');
+// Render Cards
+function renderCards() {
+    const grid = document.getElementById('resultsGrid');
     const start = (currentPage - 1) * itemsPerPage;
     const end = start + itemsPerPage;
     const pageData = filteredProjects.slice(start, end);
 
-    tbody.innerHTML = pageData.map(p => `
-        <tr data-id="${p.id}">
-            <td>${p.id || ''}</td>
-            <td class="title-cell" title="${escapeHtml(p.title || '')}">${escapeHtml(p.title || '')}</td>
-            <td><span class="status-badge ${getStatusClass(p.status)}">${p.status || ''}</span></td>
-            <td class="pi-cell clickable" data-pi="${escapeHtml(p.pi || '')}">${escapeHtml(p.pi || '')}</td>
-            <td>${escapeHtml(p.inst || '')}</td>
-            <td>${p.date || ''}</td>
-        </tr>
-    `).join('');
+    grid.innerHTML = pageData.map(p => `
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 hover:shadow-md transition-all cursor-pointer group flex flex-col h-full relative" data-id="${p.id}">
+        <div class="flex justify-between items-start mb-3">
+            <span class="status-badge ${getStatusClass(p.status)} text-xs">${p.status || ''}</span>
+            <span class="text-xs text-slate-400 font-mono">#${p.id}</span>
+        </div>
+        
+        <h3 class="text-slate-800 font-bold text-lg mb-3 line-clamp-2 group-hover:text-indigo-600 transition-colors" title="${escapeHtml(p.title || '')}">
+            ${escapeHtml(p.title || 'No Title')}
+        </h3>
+        
+        <div class="mt-auto space-y-2.5 text-sm text-slate-600">
+            <div class="flex items-center gap-2 text-xs">
+                <span class="font-semibold text-slate-700 truncate max-w-[60%]" title="${escapeHtml(p.inst || '')}">${escapeHtml(p.inst || '')}</span>
+                <span class="text-slate-300">|</span>
+                <span class="text-indigo-600 hover:text-indigo-800 transition-colors font-medium truncate flex-1 pi-link" data-pi="${escapeHtml(p.pi || '')}" title="${escapeHtml(p.pi || '')}">
+                    ${escapeHtml(p.pi || 'Unknown')}
+                </span>
+            </div>
+            <div class="flex items-center gap-3 text-xs text-slate-500 pt-3 border-t border-slate-50 mt-1">
+               <div class="flex items-center gap-1.5">
+                   <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                   <span>${p.date || 'N/A'}</span>
+               </div>
+               <div class="flex items-center gap-1.5 ml-auto">
+                   <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                   <span>${(p.dur || '0').toString().toLowerCase().match(/mo|non/) ? p.dur : (p.dur || '0') + 'mo'}</span>
+               </div>
+            </div>
+        </div>
+    </div>
+`).join('');
 
-    // Add click handlers for row (detail modal)
-    tbody.querySelectorAll('tr').forEach(tr => {
-        tr.addEventListener('click', (e) => {
-            // PI 셀 클릭이 아닌 경우에만 상세 모달 표시
-            if (!e.target.classList.contains('pi-cell')) {
-                showDetail(tr.dataset.id);
+    // Add Click Listeners
+    grid.querySelectorAll('.group[data-id]').forEach(card => {
+        card.addEventListener('click', (e) => {
+            // Prevent if clicking PI link
+            if (!e.target.closest('.pi-link')) {
+                showDetail(card.dataset.id);
             }
         });
     });
 
-    // Add click handlers for PI name (filter by PI)
-    tbody.querySelectorAll('.pi-cell').forEach(cell => {
-        cell.addEventListener('click', (e) => {
+    // PI Link Listeners
+    grid.querySelectorAll('.pi-link').forEach(link => {
+        link.addEventListener('click', (e) => {
             e.stopPropagation();
-            const piName = cell.dataset.pi;
+            const piName = link.dataset.pi;
             if (piName) {
                 filterByPI(piName);
             }
@@ -694,7 +671,6 @@ function renderTable() {
     renderPagination();
 }
 
-// Get Status Class
 function getStatusClass(status) {
     if (!status) return '';
     const s = status.toLowerCase();
@@ -703,7 +679,6 @@ function getStatusClass(status) {
     return '';
 }
 
-// Render Pagination
 function renderPagination() {
     const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
     const pagination = document.getElementById('pagination');
@@ -714,11 +689,8 @@ function renderPagination() {
     }
 
     let html = '';
-
-    // Previous button
     html += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">이전</button>`;
 
-    // Page numbers
     const maxVisible = 5;
     let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
     let endPage = Math.min(totalPages, startPage + maxVisible - 1);
@@ -741,18 +713,41 @@ function renderPagination() {
         html += `<button onclick="goToPage(${totalPages})">${totalPages}</button>`;
     }
 
-    // Next button
     html += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">다음</button>`;
-
     pagination.innerHTML = html;
 }
 
-// Go to Page
 function goToPage(page) {
     currentPage = page;
-    renderTable();
-    window.scrollTo({ top: document.querySelector('.table-section').offsetTop - 20, behavior: 'smooth' });
+    renderCards();
+    window.scrollTo({ top: document.querySelector('#resultsGrid').offsetTop - 100, behavior: 'smooth' });
 }
+
+// Window Globals
+window.goToPage = goToPage;
+
+// --- Remaining functions (helpers like updateResultsCount, updateCharts, wordcloud, etc.) need to be here or assumed present ---
+// Since I'm replacing the whole file, I MUST include them or ensure they are preserved.
+// Based on "replace_file_content" logic, I need to provide VALID replacement.
+// The file is 1431 lines. I am replacing the TOP part and restructuring.
+// I need to be careful not to delete functions I didn't verify.
+// The previous view showed down to line 1120 (showDetail).
+// I will reuse the existing logic for the rest of the functions (updateResultsCount, etc.) by NOT replacing them if possible,
+// OR since I have to replace a large chunk to fix scope, I should include them.
+// But I don't have the code for `updateResultsCount`, `updateCharts`, `escapeHtml`, `showDetail`, `openChartModal`, etc. in the diff above.
+// Wait! I can't replace the whole file if I don't have the whole content.
+// I will only replace the `initDashboard` function and the top-level structure.
+// I will keep the bottom functions as is, but I need to make sure they are NOT inside `initDashboard`.
+// Currently, `initDashboard` ENDS at line 1426 (based on my previous edits).
+// So EVERYTHING was inside `initDashboard`. This is the problem.
+// Methods like `sortProjects` were inside `initDashboard`.
+
+// Strategy:
+// 1. Delete `initDashboard` wrapper function declaration line (and its closing brace).
+// 2. Move `document.addEventListener('DOMContentLoaded', ...)` to only wrap the `initApp` call and nav logic.
+// 3. Ensure all other functions are at top level.
+
+
 
 // Update Results Count
 function updateResultsCount() {
@@ -1027,39 +1022,107 @@ function showDetail(projectId) {
     if (!project) return;
 
     const modalBody = document.getElementById('modalBody');
+
+    // Helper to format date
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        return isNaN(date.getTime()) ? dateStr : date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+    };
+
     modalBody.innerHTML = `
-        <h2>${escapeHtml(project.title || '')}</h2>
-        <div class="detail-grid">
-            <span class="detail-label">과제번호</span>
-            <span class="detail-value">${project.id || ''}</span>
+        <div class="space-y-6">
+            <!-- Header Section -->
+            <div class="border-b border-slate-100 pb-4">
+                <div class="flex flex-wrap gap-2 mb-3">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">
+                        ${project.id || 'No ID'}
+                    </span>
+                    <span class="status-badge ${getStatusClass(project.status)}">
+                        ${project.status || 'Unknown'}
+                    </span>
+                </div>
+                <h2 class="text-xl md:text-2xl font-bold text-slate-900 leading-tight">
+                    ${escapeHtml(project.title || 'Untitled Project')}
+                </h2>
+            </div>
 
-            <span class="detail-label">상태</span>
-            <span class="detail-value"><span class="status-badge ${getStatusClass(project.status)}">${project.status || ''}</span></span>
+            <!-- Key Details Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <!-- Left Column -->
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Principal Investigator</h4>
+                        <div class="flex items-center gap-2">
+                             <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs">
+                                ${(project.pi || '?').charAt(0)}
+                            </div>
+                            <span class="font-medium text-slate-900">${escapeHtml(project.pi || '-')}</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Host Institution</h4>
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-xs">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m8-2a2 2 0 01-2-2h-4a2 2 0 01-2 2v2m2-2v-5m6 0v5" />
+                                </svg>
+                            </div>
+                            <span class="font-medium text-slate-900">${escapeHtml(project.inst || '-')}</span>
+                        </div>
+                    </div>
+                </div>
 
-            <span class="detail-label">과제책임자</span>
-            <span class="detail-value">${escapeHtml(project.pi || '')}</span>
+                <!-- Right Column -->
+                <div class="space-y-4">
+                     <div>
+                        <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Project Period</h4>
+                        <div class="text-sm font-medium text-slate-900">
+                            ${formatDate(project.date)}
+                            <span class="text-slate-400 mx-1">•</span>
+                            ${project.dur || '-'}
+                        </div>
+                    </div>
 
-            <span class="detail-label">수행기관</span>
-            <span class="detail-value">${escapeHtml(project.inst || '')}</span>
+                    ${project.url ? `
+                    <div>
+                        <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Links</h4>
+                        <a href="${project.url}" target="_blank" class="inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
+                            View on IGMS
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                        </a>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
 
-            <span class="detail-label">시작일</span>
-            <span class="detail-value">${project.date || ''}</span>
+            ${project.kw ? `
+            <!-- Keywords -->
+            <div>
+                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Keywords</h4>
+                <div class="flex flex-wrap gap-2">
+                    ${project.kw.split(/[;,]/).filter(k => k.trim().length > 0).map(k => `
+                        <span class="px-2.5 py-1 rounded-md bg-slate-50 text-slate-600 text-xs font-medium border border-slate-100">
+                            ${k.trim()}
+                        </span>
+                    `).join('')}
+                </div>
+            </div>
+            ` : ''}
 
-            <span class="detail-label">수행기간</span>
-            <span class="detail-value">${project.dur || ''}</span>
-
-            <span class="detail-label">키워드</span>
-            <span class="detail-value">${escapeHtml(project.kw || '')}</span>
-
-            <span class="detail-label">상세 URL</span>
-            <span class="detail-value">${project.url ? `<a href="${project.url}" target="_blank">IGMS에서 보기</a>` : ''}</span>
+            ${project.abs ? `
+            <!-- Abstract -->
+            <div class="pt-4 border-t border-slate-100">
+                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Abstract</h4>
+                <div class="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100 max-h-60 overflow-y-auto">
+                    ${escapeHtml(project.abs)}
+                </div>
+            </div>
+            ` : ''}
         </div>
-        ${project.abs ? `
-        <div class="abstract-section">
-            <h3>초록 (Abstract)</h3>
-            <p>${escapeHtml(project.abs)}</p>
-        </div>
-        ` : ''}
     `;
 
     document.getElementById('detailModal').classList.add('active');
@@ -1356,19 +1419,6 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
-}
-
-// Debounce Helper
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
 }
 
 // Make goToPage global for pagination buttons

@@ -1,0 +1,22 @@
+{
+    "name": "igms-dashboard",
+    "version": "1.0.0",
+    "description": "Dashboard for IGMS Graph Analysis",
+    "scripts": {
+        "start": "npx serve . -l 5000",
+        "start:https": "npx serve . -l 5000 --ssl-cert cert.pem --ssl-key key.pem",
+        "dev": "npx serve . -l 5000",
+        "build:css": "tailwindcss -i ./dashboard/css/input.css -o ./dashboard/css/output.css --content './dashboard/**/*.html,./dashboard/**/*.js' --minify",
+        "build": "npm run build:css"
+    },
+    "dependencies": {
+        "@netlify/functions": "^5.1.2",
+        "cheerio": "^1.2.0",
+        "neo4j-driver": "^5.12.0"
+    },
+    "devDependencies": {
+        "@tailwindcss/cli": "^4.1.18",
+        "serve": "^14.2.0",
+        "tailwindcss": "^4.1.18"
+    }
+}
