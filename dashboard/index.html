@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KETI싱가포르 정부과제 검색 대시보드</title>
+    <title>KETI 싱가포르 협력 파트너 검색시스템</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,7 +30,7 @@
         <div
             class="bg-white/90 backdrop-blur-xl p-8 rounded-2xl shadow-2xl w-full max-w-md mx-4 border border-white/20">
             <div class="text-center mb-6">
-                <h1 class="text-2xl font-bold text-slate-900">IGMS Dashboard</h1>
+                <h1 class="text-2xl font-bold text-slate-900">KETI 싱가포르 협력 파트너 검색시스템</h1>
                 <p class="text-slate-500 text-sm mt-1">Authorized Personnel Only</p>
             </div>
 
@@ -74,7 +74,7 @@
                     <div class="text-center md:text-left">
                         <h1
                             class="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">
-                            Singapore Grants Analysis
+                            KETI 싱가포르 협력 파트너 검색시스템
                         </h1>
                         <p class="text-xs text-slate-500 mt-1 font-medium tracking-wide">
                             2006-2025 • 5,772 PROJECTS • NRF / MOH / MOE / A*STAR
@@ -359,11 +359,10 @@
                     <div class="max-w-3xl mx-auto">
                         <div class="mb-8 text-center sm:text-left">
                             <h2 class="text-2xl font-bold text-slate-900 mb-3">
-                                🇰🇷 KR Researcher - 🇸🇬 SG Grant Matching
+                                KETI 연구자 - 싱가포르 과제/ 연구책임자 매칭
                             </h2>
                             <p class="text-slate-500 leading-relaxed">
-                                Enter a Korean Researcher (R-Card) URL. AI will analyze their research field and
-                                recommend Singaporean grants for potential collaboration.
+                                R-Card 주소를 입력하시면 R-Card 내용을 바탕으로 잠재 협력 대상을 보여줍니다.
                             </p>
                         </div>
 
@@ -379,7 +378,9 @@
 
                         <!-- Researcher Info -->
                         <div id="researcherInfo"
-                            class="hidden bg-fuchsia-50 border border-fuchsia-100 rounded-xl p-6 mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            class="hidden bg-fuchsia-50 border border-fuchsia-100 rounded-xl p-6 mb-8">
+                            <p id="rGreeting" class="text-xl font-bold text-purple-700 mb-3"></p>
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                             <div>
                                 <h3 id="rName" class="text-lg font-bold text-slate-900"></h3>
                                 <p id="rAffiliation" class="text-slate-600 mt-1"></p>
@@ -388,6 +389,7 @@
                                 class="px-4 py-2 bg-white border border-fuchsia-200 text-fuchsia-700 rounded-lg text-sm font-medium hover:bg-fuchsia-100 transition-colors">
                                 View Profile ↗
                             </a>
+                            </div>
                         </div>
 
                         <h3 class="text-lg font-bold text-slate-700 border-b border-slate-100 pb-3 mb-6">Matching

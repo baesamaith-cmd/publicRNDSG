@@ -1,6 +1,13 @@
 /* Reset & Base Overrides */
 /* Most base styles handled by Tailwind via CDN */
 
+/* Navigation Tab Active State */
+.nav-item.active {
+    background: white !important;
+    color: #4f46e5 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
 /* Choices.js Custom Styles */
 .choices {
     margin-bottom: 0;

@@ -503,8 +503,8 @@ async function applyFilters() {
     if (isAIEnabled && keywords.length > 0) {
         const query = document.getElementById('keywordInput').value;
         if (window.searchSemantic) {
-            const results = await window.searchSemantic(query, allProjects, 100, 'dashboard');
-            results.forEach(r => semanticScores[r.id] = r.score);
+            const results = await window.searchSemantic(query, allProjects, allProjects.length, 'dashboard');
+            results.filter(r => r.score > 0).forEach(r => semanticScores[r.id] = r.score);
         }
     }
 
@@ -534,15 +534,13 @@ async function applyFilters() {
         filteredProjects.sort((a, b) => (b._aiScore || 0) - (a._aiScore || 0));
         document.querySelectorAll('#resultsTable th').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
     } else {
-        if (filteredProjects.length > 0 && !filteredProjects[0]._aiScore) {
-            const th = document.querySelector(`#resultsTable th.sort-asc, #resultsTable th.sort-desc`);
-            if (th) {
-                const field = th.dataset.sort;
-                const order = th.classList.contains('sort-asc') ? 'asc' : 'desc';
-                sortProjects(field, order);
-            } else {
-                sortProjects('date', 'desc');
-            }
+        const th = document.querySelector(`#resultsTable th.sort-asc, #resultsTable th.sort-desc`);
+        if (th) {
+            const field = th.dataset.sort;
+            const order = th.classList.contains('sort-asc') ? 'asc' : 'desc';
+            sortProjects(field, order);
+        } else {
+            sortProjects('date', 'desc');
         }
     }
 

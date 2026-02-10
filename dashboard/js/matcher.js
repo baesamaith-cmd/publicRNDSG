@@ -36,19 +36,55 @@ function dotProduct(a, b) {
 }
 
 /**
- * Compute Jaccard similarity between two keyword sets.
+ * Stopwords to ignore in containment matching.
  */
-function keywordOverlap(kwA, kwB) {
-    if (!kwA || !kwB || kwA.length === 0 || kwB.length === 0) return 0;
-    // Normalize: lowercase and trim
-    const setA = new Set(kwA.map(k => k.toLowerCase().trim()));
-    const setB = new Set(kwB.map(k => k.toLowerCase().trim()));
-    let intersection = 0;
-    for (const k of setA) {
-        if (setB.has(k)) intersection++;
+const STOPWORDS = new Set([
+    'the', 'a', 'an', 'of', 'in', 'on', 'for', 'and', 'or', 'to', 'with',
+    'by', 'is', 'are', 'at', 'from', 'as', 'its', 'into', 'using', 'based',
+    'via', 'towards', 'toward', 'through', 'between', 'under', 'over', 'about',
+]);
+
+/**
+ * Tokenize a keyword phrase into individual words, removing stopwords.
+ * E.g., "Multi-Agent Systems" → ["multi", "agent", "systems"]
+ */
+function tokenizePhrase(phrase) {
+    return phrase.toLowerCase().split(/[\s\-_/]+/).filter(w => w.length > 1 && !STOPWORDS.has(w));
+}
+
+/**
+ * Compute containment-based keyword score.
+ * For each project keyword phrase, checks how many of its constituent words
+ * exist in the researcher's keyword vocabulary.
+ *
+ * @param {string[]} rKeywords - Researcher keywords (individual word tokens)
+ * @param {string[]} pPhrases - Project keyword phrases (multi-word)
+ * @returns {number} Score between 0 and 1
+ */
+function keywordOverlap(rKeywords, pPhrases) {
+    if (!rKeywords || !pPhrases || rKeywords.length === 0 || pPhrases.length === 0) return 0;
+
+    // Build researcher vocabulary (tokenize all their keywords too)
+    const rVocab = new Set();
+    for (const kw of rKeywords) {
+        for (const w of kw.toLowerCase().split(/[\s\-_/]+/)) {
+            if (w.length > 1 && !STOPWORDS.has(w)) rVocab.add(w);
+        }
     }
-    const union = setA.size + setB.size - intersection;
-    return union > 0 ? intersection / union : 0;
+    if (rVocab.size === 0) return 0;
+
+    // Score each project phrase by containment
+    let totalScore = 0;
+    let validPhrases = 0;
+    for (const phrase of pPhrases) {
+        const tokens = tokenizePhrase(phrase);
+        if (tokens.length === 0) continue;
+        const matched = tokens.filter(w => rVocab.has(w)).length;
+        totalScore += matched / tokens.length;
+        validPhrases++;
+    }
+
+    return validPhrases > 0 ? totalScore / validPhrases : 0;
 }
 
 /**
@@ -154,9 +190,9 @@ export async function initMatcher(projects) {
             for (let i = 0; i < igmsEmbeddings.length; i++) {
                 const semanticScore = dotProduct(embedding, igmsEmbeddings[i]);
 
-                // Keyword overlap score (Phase 3: hybrid scoring)
-                const projKw = parseProjectKeywords(projects[i]?.kw);
-                const kwScore = keywordOverlap(rKeywords || [], projKw);
+                // Containment-based keyword score (fixes granularity mismatch)
+                const projPhrases = parseProjectKeywords(projects[i]?.kw);
+                const kwScore = keywordOverlap(rKeywords || [], projPhrases);
 
                 // Hybrid: 70% semantic + 30% keyword
                 const finalScore = 0.7 * semanticScore + 0.3 * kwScore;
@@ -165,14 +201,23 @@ export async function initMatcher(projects) {
             }
 
             scores.sort((a, b) => b.score - a.score);
-            const topMatches = scores.slice(0, 20).map(item => ({
-                id: projects[item.index].id,
-                score: item.score,
-                semantic: item.semantic,
-                kwScore: item.kwScore
-            }));
+            const totalProjects = scores.length;
+            const topMatches = scores.slice(0, 20).map((item, rank) => {
+                // Percentile: count how many projects score lower
+                const lowerCount = scores.filter(s => s.score < item.score).length;
+                const percentile = 100 - (lowerCount / totalProjects * 100);
+                return {
+                    id: projects[item.index].id,
+                    score: item.score,
+                    semantic: item.semantic,
+                    kwScore: item.kwScore,
+                    percentile: percentile.toFixed(1),
+                };
+            });
 
-            console.log(`[Matcher] Top score: ${(topMatches[0].score * 100).toFixed(1)}% (semantic: ${(topMatches[0].semantic * 100).toFixed(1)}%, kw: ${(topMatches[0].kwScore * 100).toFixed(1)}%)`);
+            const kwNonZero = scores.filter(s => s.kwScore > 0).length;
+            console.log(`[Matcher] Top score: ${(topMatches[0].score * 100).toFixed(1)}% (semantic: ${(topMatches[0].semantic * 100).toFixed(1)}%, kw: ${(topMatches[0].kwScore * 100).toFixed(1)}%, Top ${topMatches[0].percentile}%)`);
+            console.log(`[Matcher] Keyword coverage: ${kwNonZero}/${totalProjects} (${(kwNonZero/totalProjects*100).toFixed(1)}%) non-zero`);
 
             // 5. Render Results
             updateStatus('결과 표시 중...', 90);
@@ -191,6 +236,11 @@ export async function initMatcher(projects) {
 function displayResearcherInfo(metadata) {
     const researcherInfo = document.getElementById('researcherInfo');
     researcherInfo.classList.remove('hidden');
+
+    // "문재원 (JaeWon Moon)" → "문재원"
+    const korName = metadata.name.split('(')[0].trim();
+    document.getElementById('rGreeting').textContent = `안녕하세요 ${korName}님!`;
+
     document.getElementById('rName').textContent = metadata.name;
     document.getElementById('rAffiliation').textContent = metadata.affiliation;
     document.getElementById('rLink').href = metadata.url;
@@ -216,12 +266,12 @@ function renderMatches(matches, projects) {
                 <div class="match-card-top">
                     <span class="match-rank">${idx + 1}</span>
                     <a href="${p.url}" target="_blank" class="match-title">${p.title}</a>
-                    <span class="match-score">${pct}%</span>
+                    <span class="match-score">${pct}% <span style="font-size:0.65rem;color:#a78bfa;font-weight:400">Top ${m.percentile}%</span></span>
                 </div>
                 <div class="match-bar-wrap">
                     <div class="match-bar" style="width:${pct}%;background:${barColor}"></div>
                 </div>
-                <div class="match-meta">${p.pi} · ${p.inst} <span class="match-detail">S:${semPct} K:${kwPct}</span></div>
+                <div class="match-meta">${p.pi} · ${p.inst} <span class="match-detail">Semantic:${semPct} Keyword:${kwPct}</span></div>
             </div>
         `;
     }).join('');
