@@ -105,9 +105,13 @@
                             2006-2025 • 5,772 PROJECTS • NRF / MOH / MOE / A*STAR
                         </p>
                     </div>
-                        <button onclick="logout()" class="px-3 py-1.5 bg-slate-100 text-slate-500 rounded-lg hover:bg-slate-200 text-xs font-medium whitespace-nowrap">
-                            🚪 로그아웃
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <a id="adminBtn" href="/dashboard/admin.html" style="display:none" class="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 text-xs font-medium whitespace-nowrap">
+                                ⚙️ Admin
+                            </a>
+                            <button onclick="logout()" class="px-3 py-1.5 bg-slate-100 text-slate-500 rounded-lg hover:bg-slate-200 text-xs font-medium whitespace-nowrap">
+                                🚪 로그아웃
+                            </button>
                     </div>
 
                     <!-- Navigation -->

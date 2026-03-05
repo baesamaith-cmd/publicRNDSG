@@ -83,6 +83,14 @@
         if (typeof initApp === 'function') {
             initApp();
         }
+
+        // Show admin button if user is admin
+        window.isAdmin().then(function(admin) {
+            var adminBtn = document.getElementById('adminBtn');
+            if (adminBtn && admin) {
+                adminBtn.style.display = 'inline-block';
+            }
+        });
     }
 
     function showOrgModal() {
