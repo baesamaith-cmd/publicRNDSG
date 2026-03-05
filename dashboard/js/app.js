@@ -401,7 +401,6 @@ function initCharts() {
     });
 }
 
-
 // Initialize Event Listeners
 function initEventListeners() {
     const debouncedApplyFilters = debounce(applyFilters, 300);
@@ -1342,11 +1341,9 @@ function filterByStatus(status) {
 }
 
 // Export to CSV
-// Export to CSV
 function exportToCSV() {
     // Track export event
     window.trackEvent('export', { format: 'csv', count: filteredProjects.length });
-    const headers = ['Project ID', 'Title', 'Status', 'PI Name', 'Institution', 'Start Date', 'Duration', 'Keywords', 'Abstract', 'URL'];
     const headers = ['Project ID', 'Title', 'Status', 'PI Name', 'Institution', 'Start Date', 'Duration', 'Keywords', 'Abstract', 'URL'];
     const rows = filteredProjects.map(p => [
         p.id, p.title, p.status, p.pi, p.inst, p.date, p.dur, p.kw, p.abs, p.url
@@ -1361,11 +1358,9 @@ function exportToCSV() {
 }
 
 // Export to Excel
-// Export to Excel
 function exportToExcel() {
     // Track export event
     window.trackEvent('export', { format: 'excel', count: filteredProjects.length });
-    const data = filteredProjects.map(p => ({
     const data = filteredProjects.map(p => ({
         'Project ID': p.id,
         'Title': p.title,
