@@ -59,6 +59,7 @@
         if (_a.data && _a.data.organization) {
             // User has completed profile - update last_login_at and show dashboard
             await window.supabaseClient.from('users').update({ last_login_at: new Date().toISOString() }).eq('id', user.id);
+            window.trackEvent('login', { method: 'google' });
             showDashboard();
         } else {
             // Show org/dept modal
@@ -162,6 +163,7 @@
     // Logout
     // ============================================
     window.logout = async function() {
+        await window.trackEvent('logout', {});
         await window.supabaseClient.auth.signOut();
         location.reload();
     };
