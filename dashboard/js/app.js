@@ -161,6 +161,25 @@ const API_URL = 'https://searchsgpartners.netlify.app/.netlify/functions/data';
 // Load Data
 async function loadData() {
     try {
+        // Get Supabase session token
+        const session = await window.getSession();
+        const token = session ? session.access_token : null;
+        
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            const response = await fetch('/dashboard/data/projects.json');
+            allProjects = await response.json();
+        } else {
+            const response = await fetch(API_URL, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!response.ok) throw new Error(`API error: ${response.status}`);
+            allProjects = await response.json();
+        }
+const API_URL = 'https://searchsgpartners.netlify.app/.netlify/functions/data';
+
+// Load Data
+async function loadData() {
+    try {
         const password = sessionStorage.getItem('igms_password');
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             const response = await fetch('/dashboard/data/projects.json');
@@ -532,20 +551,14 @@ async function applyFilters() {
 
     if (isAIEnabled && keywords.length > 0) {
         filteredProjects.sort((a, b) => (b._aiScore || 0) - (a._aiScore || 0));
-        document.querySelectorAll('#resultsTable th').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
     } else {
-        const th = document.querySelector(`#resultsTable th.sort-asc, #resultsTable th.sort-desc`);
-        if (th) {
-            const field = th.dataset.sort;
-            const order = th.classList.contains('sort-asc') ? 'asc' : 'desc';
-            sortProjects(field, order);
-        } else {
-            sortProjects('date', 'desc');
-        }
+        sortProjects('date', 'desc');
     }
 
     currentPage = 1;
-    currentPage = 1;
+    renderCards();
+    // Track search/filter event
+    window.trackEvent('search', { query: keywords.join(' '), ai_enabled: isAIEnabled, results_count: filteredProjects.length, filters: { institutions: selectedInstitutions, statuses: selectedStatuses, dateFrom, dateTo } });
     renderCards();
     updateCharts();
     updateResultsCount();
@@ -723,29 +736,6 @@ function goToPage(page) {
 
 // Window Globals
 window.goToPage = goToPage;
-
-// --- Remaining functions (helpers like updateResultsCount, updateCharts, wordcloud, etc.) need to be here or assumed present ---
-// Since I'm replacing the whole file, I MUST include them or ensure they are preserved.
-// Based on "replace_file_content" logic, I need to provide VALID replacement.
-// The file is 1431 lines. I am replacing the TOP part and restructuring.
-// I need to be careful not to delete functions I didn't verify.
-// The previous view showed down to line 1120 (showDetail).
-// I will reuse the existing logic for the rest of the functions (updateResultsCount, etc.) by NOT replacing them if possible,
-// OR since I have to replace a large chunk to fix scope, I should include them.
-// But I don't have the code for `updateResultsCount`, `updateCharts`, `escapeHtml`, `showDetail`, `openChartModal`, etc. in the diff above.
-// Wait! I can't replace the whole file if I don't have the whole content.
-// I will only replace the `initDashboard` function and the top-level structure.
-// I will keep the bottom functions as is, but I need to make sure they are NOT inside `initDashboard`.
-// Currently, `initDashboard` ENDS at line 1426 (based on my previous edits).
-// So EVERYTHING was inside `initDashboard`. This is the problem.
-// Methods like `sortProjects` were inside `initDashboard`.
-
-// Strategy:
-// 1. Delete `initDashboard` wrapper function declaration line (and its closing brace).
-// 2. Move `document.addEventListener('DOMContentLoaded', ...)` to only wrap the `initApp` call and nav logic.
-// 3. Ensure all other functions are at top level.
-
-
 
 // Update Results Count
 function updateResultsCount() {
@@ -1015,7 +1005,12 @@ function closeWordCloudModal() {
 }
 
 // Show Detail Modal
+// Show Detail Modal
 function showDetail(projectId) {
+    const project = allProjects.find(p => p.id === projectId);
+    if (!project) return;
+    // Track view_project event
+    window.trackEvent('view_project', { project_id: project.id, title: project.title });
     const project = allProjects.find(p => p.id === projectId);
     if (!project) return;
 
@@ -1366,7 +1361,11 @@ function filterByStatus(status) {
 }
 
 // Export to CSV
+// Export to CSV
 function exportToCSV() {
+    // Track export event
+    window.trackEvent('export', { format: 'csv', count: filteredProjects.length });
+    const headers = ['Project ID', 'Title', 'Status', 'PI Name', 'Institution', 'Start Date', 'Duration', 'Keywords', 'Abstract', 'URL'];
     const headers = ['Project ID', 'Title', 'Status', 'PI Name', 'Institution', 'Start Date', 'Duration', 'Keywords', 'Abstract', 'URL'];
     const rows = filteredProjects.map(p => [
         p.id, p.title, p.status, p.pi, p.inst, p.date, p.dur, p.kw, p.abs, p.url
@@ -1381,7 +1380,11 @@ function exportToCSV() {
 }
 
 // Export to Excel
+// Export to Excel
 function exportToExcel() {
+    // Track export event
+    window.trackEvent('export', { format: 'excel', count: filteredProjects.length });
+    const data = filteredProjects.map(p => ({
     const data = filteredProjects.map(p => ({
         'Project ID': p.id,
         'Title': p.title,

@@ -222,6 +222,10 @@ export async function initMatcher(projects) {
             // 5. Render Results
             updateStatus('결과 표시 중...', 90);
             renderMatches(topMatches, projects);
+            // Track match event
+            window.trackEvent('match', { researcher_url: slug, top_score: topMatches[0]?.score || 0, results_count: topMatches.length });
+            updateStatus('결과 표시 중...', 90);
+            renderMatches(topMatches, projects);
 
         } catch (error) {
             console.error(error);
