@@ -79,6 +79,12 @@
                     <td class="px-4 py-2">${escapeHtml(u.department || '-')}</td>
                     <td class="px-4 py-2">${u.last_login_at ? formatDate(u.last_login_at) : '-'}</td>
                     <td class="px-4 py-2">${countsMap[u.id] || 0}</td>
+                    <td class="px-4 py-2">
+                        <button onclick="showUserHistory('${u.id}', '${escapeHtml(u.name || '-')}', '${escapeHtml(u.email)}')" 
+                            class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 text-xs font-medium">
+                            📋 View
+                        </button>
+                    </td>
                 </tr>
             `).join('');
             
@@ -345,6 +351,71 @@
     }
     
     // Start
+    
+    // Show user history modal
+    window.showUserHistory = async function(userId, userName, userEmail) {
+        document.getElementById('historyUserName').textContent = userName + ' Activity History';
+        document.getElementById('historyUserEmail').textContent = userEmail;
+        document.getElementById('userHistoryModal').style.display = 'flex';
+        document.getElementById('userHistoryBody').innerHTML = '<tr><td colspan="3" class="px-3 py-8 text-center text-slate-400">Loading...</td></tr>';
+        
+        try {
+            const { data: events, error } = await window.supabaseClient
+                .from('events')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false })
+                .limit(200);
+            
+            if (error) throw error;
+            
+            if (!events || events.length === 0) {
+                document.getElementById('userHistoryBody').innerHTML = '<tr><td colspan="3" class="px-3 py-8 text-center text-slate-400">No activity yet</td></tr>';
+                return;
+            }
+            
+            document.getElementById('userHistoryBody').innerHTML = events.map(e => {
+                const date = new Date(e.created_at).toLocaleString('ko-KR');
+                const type = e.event_type;
+                let details = '';
+                
+                if (type === 'search') {
+                    details = 'Query: ' + escapeHtml(e.payload?.query || '-');
+                } else if (type === 'view_project') {
+                    details = escapeHtml(e.payload?.title || e.payload?.project_id || '-');
+                } else if (type === 'export') {
+                    details = (e.payload?.format || '') + ' (' + (e.payload?.count || 0) + ' items)';
+                } else if (type === 'match') {
+                    details = escapeHtml(JSON.stringify(e.payload || {})).substring(0, 100);
+                } else {
+                    details = escapeHtml(JSON.stringify(e.payload || {})).substring(0, 100);
+                }
+                
+                const typeColors = {
+                    'search': 'bg-blue-100 text-blue-700',
+                    'view_project': 'bg-green-100 text-green-700',
+                    'export': 'bg-amber-100 text-amber-700',
+                    'match': 'bg-purple-100 text-purple-700'
+                };
+                const colorClass = typeColors[type] || 'bg-slate-100 text-slate-700';
+                
+                return '<tr class="border-b border-slate-50 hover:bg-slate-50">' +
+                    '<td class="px-3 py-2 whitespace-nowrap">' + date + '</td>' +
+                    '<td class="px-3 py-2"><span class="px-2 py-0.5 rounded-full text-xs font-medium ' + colorClass + '">' + escapeHtml(type) + '</span></td>' +
+                    '<td class="px-3 py-2 text-slate-600 truncate max-w-xs">' + details + '</td>' +
+                    '</tr>';
+            }).join('');
+            
+        } catch (e) {
+            console.error('Error loading user history:', e);
+            document.getElementById('userHistoryBody').innerHTML = '<tr><td colspan="3" class="px-3 py-8 text-center text-red-400">Error loading history</td></tr>';
+        }
+    };
+    
+    // Close user history modal
+    window.closeUserHistory = function() {
+        document.getElementById('userHistoryModal').style.display = 'none';
+    };
     init();
     
 })();
