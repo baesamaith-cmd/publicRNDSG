@@ -175,22 +175,6 @@ async function loadData() {
             if (!response.ok) throw new Error(`API error: ${response.status}`);
             allProjects = await response.json();
         }
-const API_URL = 'https://searchsgpartners.netlify.app/.netlify/functions/data';
-
-// Load Data
-async function loadData() {
-    try {
-        const password = sessionStorage.getItem('igms_password');
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            const response = await fetch('/dashboard/data/projects.json');
-            allProjects = await response.json();
-        } else {
-            const response = await fetch(API_URL, {
-                headers: { 'Authorization': `Bearer ${password}` }
-            });
-            if (!response.ok) throw new Error(`API error: ${response.status}`);
-            allProjects = await response.json();
-        }
 
         allProjects.forEach(p => {
             p.dateObj = parseDate(p.date);
