@@ -1280,6 +1280,7 @@ function filterByPI(piName) {
 
 // Filter by Bar Chart click (institution or PI) - AND condition with existing filters
 function filterByBarChart(labelData) {
+    window.trackEvent('search', { query: labelData.value, source: 'chart_click', filter_type: labelData.type });
     // Add filter based on type (AND condition - don't reset other filters)
     if (labelData.type === 'inst') {
         // Check if already selected
@@ -1304,6 +1305,7 @@ function filterByBarChart(labelData) {
 
 // Filter by Year (from line chart click) - AND condition with existing filters
 function filterByYear(year) {
+    window.trackEvent('search', { query: year, source: 'chart_click', filter_type: 'year' });
     // Set date range for the selected year (AND condition - don't reset other filters)
     const dateFromInput = document.getElementById('dateFrom');
     const dateToInput = document.getElementById('dateTo');
@@ -1328,6 +1330,7 @@ function filterByYear(year) {
 
 // Filter by Status (from pie chart click) - AND condition with existing filters
 function filterByStatus(status) {
+    window.trackEvent('search', { query: status, source: 'chart_click', filter_type: 'status' });
     // Set only the selected status (AND condition - don't reset other filters)
     // Uncheck all statuses first, then check only the selected one
     document.querySelectorAll('#statusFilters input').forEach(cb => {
