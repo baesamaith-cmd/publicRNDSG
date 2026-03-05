@@ -989,14 +989,11 @@ function closeWordCloudModal() {
 }
 
 // Show Detail Modal
-// Show Detail Modal
 function showDetail(projectId) {
     const project = allProjects.find(p => p.id === projectId);
     if (!project) return;
     // Track view_project event
     window.trackEvent('view_project', { project_id: project.id, title: project.title });
-    const project = allProjects.find(p => p.id === projectId);
-    if (!project) return;
 
     const modalBody = document.getElementById('modalBody');
 
