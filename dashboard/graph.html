@@ -17,9 +17,7 @@
     <!-- Custom CSS (Library Overrides only) -->
     <link href="/dashboard/css/style.css?v=5" rel="stylesheet">
 
-    <!-- Libraries: Neo4j driver + vis-network -->
-    <script src="https://cdn.jsdelivr.net/npm/neo4j-driver@5.27.0/lib/browser/neo4j-web.min.js"></script>
-    <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+    <!-- Libraries are imported as ES modules inside js/graph.js (sigma.js + graphology) -->
     <style>
         #viz {
             width: 100%;
@@ -60,7 +58,7 @@
                 <h1
                     class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">
                     Research Network Analysis</h1>
-                <p class="text-slate-500 mt-2 font-medium">Neo4j Graph Visualization • Collaboration & Topics</p>
+                <p class="text-slate-500 mt-2 font-medium">Network Visualization • Collaboration & Topics</p>
             </div>
             <a href="index.html"
                 class="flex items-center px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm font-medium text-sm">
@@ -72,64 +70,21 @@
             </a>
         </header>
 
-        <!-- Configuration Panel -->
+        <!-- Analysis Mode -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8">
-            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">Connection Settings</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Neo4j
-                        URI</label>
-                    <input type="text" id="neo_uri"
-                        class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-slate-50 focus:bg-white transition-colors"
-                        placeholder="bolt://localhost:7687" value="neo4j+s://b1d80b38.databases.neo4j.io">
-                </div>
-                <div>
-                    <label
-                        class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Username</label>
-                    <input type="text" id="neo_user"
-                        class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-slate-50 focus:bg-white transition-colors"
-                        placeholder="neo4j" value="neo4j">
-                </div>
-                <div>
-                    <label
-                        class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Password</label>
-                    <input type="password" id="neo_pass"
-                        class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-slate-50 focus:bg-white transition-colors"
-                        placeholder="Enter Neo4j password" value="P83uQeL6EEOo9pl_zTD8JLLpI8SlJw_Gc7AhjqqZaio">
-                </div>
-            </div>
-
-            <div class="mt-8 border-t border-slate-100 pt-6">
-                <h3 class="text-sm font-bold text-slate-700 mb-4">Analysis Mode</h3>
-                <div class="flex flex-wrap gap-3">
-                    <button onclick="drawGraph('inst-collab', event)"
-                        class="px-4 py-2.5 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 font-medium text-sm transition-colors border border-indigo-100">
-                        🏛 Institution Network
-                    </button>
-                    <button onclick="drawGraph('pi-topic', event)"
-                        class="px-4 py-2.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 font-medium text-sm transition-colors border border-emerald-100">
-                        🧪 Researcher-Topic
-                    </button>
-                    <button onclick="drawGraph('topic-connect', event)"
-                        class="px-4 py-2.5 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 font-medium text-sm transition-colors border border-amber-100">
-                        🔗 Topic Connections
-                    </button>
-                    <button onclick="drawGraph('custom', event)"
-                        class="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium text-sm transition-colors border border-slate-200">
-                        📝 Custom Cypher
-                    </button>
-                </div>
-                <div id="cypher-container" class="mt-4 hidden animate-fadeIn">
-                    <textarea id="cypher" rows="3"
-                        class="w-full p-4 border border-slate-200 rounded-xl font-mono text-sm bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
-                        placeholder="MATCH (n)-[r]->(m) RETURN n,r,m LIMIT 25"></textarea>
-                </div>
-            </div>
-
-            <div class="mt-6 flex justify-end">
-                <button id="connectBtn" onclick="drawGraph('current', event)"
-                    class="bg-indigo-600 text-white px-8 py-3 rounded-xl hover:bg-indigo-700 font-bold shadow-md hover:shadow-lg transition-all transform active:scale-95">
-                    Load Graph Network
+            <h3 class="text-sm font-bold text-slate-700 mb-4">Analysis Mode</h3>
+            <div class="flex flex-wrap gap-3">
+                <button onclick="drawGraph('inst-collab')"
+                    class="mode-btn px-4 py-2.5 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 font-medium text-sm transition-colors border border-indigo-100">
+                    🏛 Institution Network
+                </button>
+                <button onclick="drawGraph('pi-topic')"
+                    class="mode-btn px-4 py-2.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 font-medium text-sm transition-colors border border-emerald-100">
+                    🧪 Researcher-Topic
+                </button>
+                <button onclick="drawGraph('topic-connect')"
+                    class="mode-btn px-4 py-2.5 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 font-medium text-sm transition-colors border border-amber-100">
+                    🔗 Topic Connections
                 </button>
             </div>
         </div>
@@ -141,12 +96,11 @@
         <div id="viz" class="shadow-sm">
             <div
                 style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100%;color:#94a3b8;">
-                <svg class="w-16 h-16 mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-16 h-16 mb-4 text-slate-300 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                 </svg>
-                <p class="text-lg font-medium">Connect to Neo4j to visualize the network</p>
-                <p class="text-sm mt-2">Enter credentials above and click "Load Graph Network"</p>
+                <p class="text-lg font-medium">그래프 로딩 중...</p>
             </div>
         </div>
 
@@ -192,6 +146,6 @@
     </div>
 
     <!-- Graph JS -->
-    <script src="/dashboard/js/graph.js"></script>
+    <script type="module" src="/dashboard/js/graph.js?v=5"></script>
 
 </html>
