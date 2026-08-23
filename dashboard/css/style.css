@@ -345,3 +345,22 @@
   padding: 5px 11px;
   font-size: 0.75rem;
 }
+
+/* Legend type pills: explicit ON/OFF states */
+#dashboardLegend .legend-item {
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+}
+#dashboardLegend .legend-item.inactive {
+  background: #f1f5f9 !important;
+  color: #94a3b8 !important;
+  border: 1px dashed #cbd5e1;
+  box-shadow: none !important;
+}
+#dashboardLegend .legend-item.inactive > div:first-child {
+  background: #cbd5e1 !important;
+}
+#dashboardLegend .legend-item.inactive:hover {
+  color: #64748b !important;
+  border-color: #94a3b8;
+}
