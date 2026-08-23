@@ -117,9 +117,7 @@ function parseDate(dateStr) {
 // --- Main Initialization ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    // auth.js may have already called initApp() if session is pre-authenticated,
-    // but if it hasn't loaded yet (initApp not defined at that time), we call it here.
-    if (allProjects.length === 0 && document.getElementById('mainContainer')?.style.display === 'block') {
+    if (allProjects.length === 0) {
         initApp();
     }
 
@@ -161,17 +159,11 @@ const API_URL = 'https://searchsgpartners.netlify.app/.netlify/functions/data';
 // Load Data
 async function loadData() {
     try {
-        // Get Supabase session token
-        const session = await window.getSession();
-        const token = session ? session.access_token : null;
-        
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             const response = await fetch('/dashboard/data/projects.json');
             allProjects = await response.json();
         } else {
-            const response = await fetch(API_URL, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const response = await fetch(API_URL);
             if (!response.ok) throw new Error(`API error: ${response.status}`);
             allProjects = await response.json();
         }
