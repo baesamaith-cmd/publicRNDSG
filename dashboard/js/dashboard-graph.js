@@ -315,11 +315,7 @@ function showDashboardNodePopup(raw, visNode) {
         propsHtml += `<tr><td style="font-weight:600;color:#64748b;padding:6px 12px 6px 0;vertical-align:top;white-space:nowrap;font-size:0.85rem;">${displayKey}</td><td style="padding:6px 0;font-size:0.85rem;word-break:break-word;">${displayVal}</td></tr>`;
     }
 
-    // Count connections
-    if (dashNetwork) {
-        const connectedNodes = dashNetwork.getConnectedNodes(visNode.id);
-        propsHtml += `<tr><td style="font-weight:600;color:#64748b;padding:6px 12px 6px 0;font-size:0.85rem;">연결 수</td><td style="padding:6px 0;font-size:0.85rem;">${connectedNodes.length}개 노드</td></tr>`;
-    }
+    const connectionsHtml = renderConnectionsHtml(visNode.id);
 
     popup.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
@@ -331,9 +327,64 @@ function showDashboardNodePopup(raw, visNode) {
         </div>
         <h3 style="font-size:1.1rem;font-weight:700;color:#1e293b;margin-bottom:14px;line-height:1.4;">${visNode.label}</h3>
         <table style="width:100%;border-collapse:collapse;">${propsHtml}</table>
+        ${connectionsHtml}
     `;
     popup.style.display = 'block';
 }
+
+function renderConnectionsHtml(visNodeId) {
+    if (!dashNetwork || !dashVisNodes) return '';
+    const connectedIds = dashNetwork.getConnectedNodes(visNodeId);
+    const groups = {};
+
+    connectedIds.forEach(id => {
+        const raw = dashNodeDataMap.get(id);
+        const nodeItem = dashVisNodes.get(id);
+        if (!raw || !nodeItem) return;
+        const t = raw.type;
+        if (!groups[t]) groups[t] = [];
+        const p = raw.properties || {};
+        let sub = '';
+        if (t === 'Project') sub = [p.title, p.status].filter(Boolean).join(' · ');
+        else if (t === 'Person') sub = p.institution || '';
+        else if (t === 'Topic') sub = p.count ? `${p.count}회 등장` : '';
+        groups[t].push({ id, label: nodeItem.label, sub });
+    });
+
+    window.__dashConnIndex = [];
+    let html = `<div style="border-top:1px solid #e2e8f0;margin:16px 0 0;padding-top:12px;">
+        <div style="font-size:0.78rem;font-weight:700;color:#334155;margin-bottom:6px;">연결된 노드 ${connectedIds.length}개 <span style="color:#94a3b8;font-weight:500;">· 클릭하면 이동</span></div>
+        <div style="max-height:240px;overflow-y:auto;">`;
+
+    Object.keys(groups).forEach(t => {
+        if (!groups[t] || !groups[t].length) return;
+        html += `<div style="font-size:0.68rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin:10px 0 4px;">${DASH_TYPE_DISPLAY[t] || t} (${groups[t].length})</div>`;
+        groups[t].forEach(item => {
+            const idx = window.__dashConnIndex.push(item.id) - 1;
+            html += `<div onclick="dashJumpToConnected(${idx})" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'" style="cursor:pointer;padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:4px;">
+                <div style="font-size:0.85rem;font-weight:600;color:#1e293b;">${item.label}</div>
+                ${item.sub ? `<div style="font-size:0.75rem;color:#64748b;margin-top:2px;">${item.sub}</div>` : ''}
+            </div>`;
+        });
+    });
+
+    html += `</div></div>`;
+    return html;
+}
+
+window.dashJumpToConnected = function (idx) {
+    const id = (window.__dashConnIndex || [])[idx];
+    if (!id || !dashVisNodes) return;
+    const raw = dashNodeDataMap.get(id);
+    const visNode = dashVisNodes.get(id);
+    if (raw && visNode) showDashboardNodePopup(raw, visNode);
+};
+
+window.dashInspectNode = function (nodeId) {
+    const raw = dashNodeDataMap.get(nodeId);
+    const visNode = dashVisNodes && dashVisNodes.get(nodeId);
+    if (raw && visNode) showDashboardNodePopup(raw, visNode);
+};
 
 function closeDashboardNodePopup() {
     const popup = document.getElementById('dashboardNodePopup');
