@@ -240,9 +240,10 @@ function initStatusFilters() {
     container.innerHTML = ''; // Clear existing
     statuses.forEach(status => {
         const label = document.createElement('label');
+        label.className = 'status-pill';
         label.innerHTML = `
             <input type="checkbox" value="${status}" checked>
-            ${status}
+            <span>${status}</span>
         `;
         container.appendChild(label);
     });
@@ -410,10 +411,6 @@ function initEventListeners() {
 
     // Reset button
     document.getElementById('resetBtn').addEventListener('click', resetFilters);
-
-    // Export buttons
-    document.getElementById('exportCsvBtn').addEventListener('click', exportToCSV);
-    document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
 
     // Sort Dropdown
     document.getElementById('sortSelect').addEventListener('change', (e) => {
@@ -1312,55 +1309,10 @@ function filterByStatus(status) {
 }
 
 // Export to CSV
-function exportToCSV() {
-    // Track export event
-    window.trackEvent('export', { format: 'csv', count: filteredProjects.length });
-    const headers = ['Project ID', 'Title', 'Status', 'PI Name', 'Institution', 'Start Date', 'Duration', 'Keywords', 'Abstract', 'URL'];
-    const rows = filteredProjects.map(p => [
-        p.id, p.title, p.status, p.pi, p.inst, p.date, p.dur, p.kw, p.abs, p.url
-    ]);
-
-    let csv = headers.join(',') + '\n';
-    rows.forEach(row => {
-        csv += row.map(cell => `"${(cell || '').replace(/"/g, '""')}"`).join(',') + '\n';
-    });
-
-    downloadFile(csv, 'igms_projects.csv', 'text/csv');
-}
 
 // Export to Excel
-function exportToExcel() {
-    // Track export event
-    window.trackEvent('export', { format: 'excel', count: filteredProjects.length });
-    const data = filteredProjects.map(p => ({
-        'Project ID': p.id,
-        'Title': p.title,
-        'Status': p.status,
-        'PI Name': p.pi,
-        'Institution': p.inst,
-        'Start Date': p.date,
-        'Duration': p.dur,
-        'Keywords': p.kw,
-        'Abstract': p.abs,
-        'URL': p.url
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Projects');
-    XLSX.writeFile(wb, 'igms_projects.xlsx');
-}
 
 // Download File Helper
-function downloadFile(content, filename, mimeType) {
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-}
 
 // Escape HTML
 function escapeHtml(text) {

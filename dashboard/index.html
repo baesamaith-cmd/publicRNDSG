@@ -20,7 +20,7 @@
     <link href="/dashboard/css/output.css" rel="stylesheet">
 
     <!-- Custom CSS (Overrides & Libraries) -->
-    <link rel="stylesheet" href="/dashboard/css/style.css?v=5">
+    <link rel="stylesheet" href="/dashboard/css/style.css?v=6">
 </head>
 
 <body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-indigo-100 selection:text-indigo-700">
@@ -34,13 +34,14 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="py-4 space-y-4">
                     <div class="flex justify-between items-start">
-                    <div class="text-center md:text-left">
+                    <div class="inline-block text-center md:text-left">
                         <h1
-                            class="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">
+                            class="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600 whitespace-nowrap">
                             싱가포르 협력 파트너 검색시스템
                         </h1>
-                        <p class="text-xs text-slate-500 mt-1 font-medium tracking-wide">
-                            2006-2025 • 5,772 PROJECTS • NRF / MOH / MOE / A*STAR
+                        <p class="text-xs text-slate-500 mt-1 font-medium tracking-wide whitespace-nowrap"
+                            style="display:flex;justify-content:space-between;gap:6px;">
+                            <span>2006-2026</span><span>•</span><span>6,130 PROJECTS</span><span>•</span><span>NRF / MOH / MOE / A*STAR</span>
                         </p>
                     </div>
 
@@ -168,16 +169,6 @@
                             </svg>
                             Reset Filters
                         </button>
-                        <div class="flex gap-3 w-full sm:w-auto">
-                            <button id="exportCsvBtn"
-                                class="flex-1 sm:flex-none px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-sm">
-                                Export CSV
-                            </button>
-                            <button id="exportExcelBtn"
-                                class="flex-1 sm:flex-none px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-sm transition-colors">
-                                Export Excel
-                            </button>
-                        </div>
                     </div>
                 </section>
 
