@@ -78,6 +78,7 @@ function buildGraphData(projects) {
             nodesMap.set(projId, { id: projId, label: p.id || 'Project', nodeType: 'Project', ...DASH_NODE_STYLES.Project });
             dashNodeDataMap.set(projId, {
                 type: 'Project',
+                search: `${p.id} ${p.title} ${p.kw || ''}`,
                 properties: { id: p.id, title: p.title, status: p.status, pi: p.pi, inst: p.inst, date: p.date, dur: p.dur }
             });
         }
@@ -87,7 +88,7 @@ function buildGraphData(projects) {
             const instId = 'inst_' + p.inst;
             if (!nodesMap.has(instId)) {
                 nodesMap.set(instId, { id: instId, label: p.inst.length > 25 ? p.inst.substring(0, 25) + '...' : p.inst, nodeType: 'Institution', ...DASH_NODE_STYLES.Institution });
-                dashNodeDataMap.set(instId, { type: 'Institution', properties: { name: p.inst } });
+                dashNodeDataMap.set(instId, { type: 'Institution', search: p.inst, properties: { name: p.inst } });
             }
             edges.push({ id: 'e' + (edgeId++), from: projId, to: instId, ...DASH_EDGE_STYLES.HOSTED_BY, arrows: { to: { enabled: true, scaleFactor: 0.5 } }, smooth: { type: 'continuous' } });
         }
@@ -97,7 +98,7 @@ function buildGraphData(projects) {
             const piId = 'pi_' + p.pi;
             if (!nodesMap.has(piId)) {
                 nodesMap.set(piId, { id: piId, label: p.pi, nodeType: 'Person', ...DASH_NODE_STYLES.Person });
-                dashNodeDataMap.set(piId, { type: 'Person', properties: { name: p.pi, institution: p.inst } });
+                dashNodeDataMap.set(piId, { type: 'Person', search: `${p.pi} ${p.inst}`, properties: { name: p.pi, institution: p.inst } });
             }
             edges.push({ id: 'e' + (edgeId++), from: piId, to: projId, ...DASH_EDGE_STYLES.LEADS, arrows: { to: { enabled: true, scaleFactor: 0.5 } }, smooth: { type: 'continuous' } });
         }
@@ -110,7 +111,7 @@ function buildGraphData(projects) {
                 const topicId = 'topic_' + kw;
                 if (!nodesMap.has(topicId)) {
                     nodesMap.set(topicId, { id: topicId, label: kw.length > 20 ? kw.substring(0, 20) + '...' : kw, nodeType: 'Topic', ...DASH_NODE_STYLES.Topic });
-                    dashNodeDataMap.set(topicId, { type: 'Topic', properties: { name: kw, count: topicFreq[kw] } });
+                    dashNodeDataMap.set(topicId, { type: 'Topic', search: kw, properties: { name: kw, count: topicFreq[kw] } });
                 }
                 edges.push({ id: 'e' + (edgeId++), from: projId, to: topicId, ...DASH_EDGE_STYLES.TAGGED, arrows: { to: { enabled: true, scaleFactor: 0.5 } }, smooth: { type: 'continuous' } });
             });
@@ -143,6 +144,32 @@ function buildGraphData(projects) {
     return { nodes: Array.from(nodesMap.values()), edges };
 }
 
+function applyKeywordEmphasis(nodes, edges) {
+    const input = document.getElementById('keywordInput');
+    const q = (input ? input.value : '').trim().toLowerCase();
+    if (!q) return;
+
+    const matched = new Set();
+    nodes.forEach(n => {
+        const raw = dashNodeDataMap.get(n.id);
+        const hay = ((raw && raw.search) || n.label).toLowerCase();
+        if (hay.includes(q)) matched.add(n.id);
+    });
+    if (matched.size === 0) return;
+
+    nodes.forEach(n => {
+        if (matched.has(n.id)) {
+            n.borderWidth = 3;
+            n.size = Math.round(n.size * 1.2);
+        } else {
+            n.opacity = 0.15;
+        }
+    });
+    edges.forEach(e => {
+        e.opacity = (matched.has(e.from) && matched.has(e.to)) ? 1 : 0.08;
+    });
+}
+
 function renderDashboardGraph(projects) {
     const vizContainer = document.getElementById('dashboardViz');
     if (!vizContainer) return;
@@ -173,6 +200,7 @@ function renderDashboardGraph(projects) {
     vizContainer.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100%;color:#64748b;"><p>네트워크 생성 중...</p></div>';
 
     const { nodes, edges } = buildGraphData(capped);
+    applyKeywordEmphasis(nodes, edges);
     dashAllNodes = nodes;
     dashAllEdges = edges;
 
