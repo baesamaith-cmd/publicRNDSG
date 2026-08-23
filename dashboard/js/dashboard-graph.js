@@ -1,7 +1,7 @@
 // dashboard-graph.js - Network graph for filtered dashboard projects (no Neo4j)
 
 let dashNetwork = null;
-let dashGraphVisible = false;
+let dashGraphVisible = true;
 let dashNodeDataMap = new Map();
 let dashVisibleTypes = new Set(['Institution', 'Project', 'Person', 'Topic']);
 let dashAllNodes = []; // full node list before filtering

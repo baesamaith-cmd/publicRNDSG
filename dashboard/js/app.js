@@ -120,30 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (allProjects.length === 0) {
         initApp();
     }
-
-    // Navigation Logic
-    const navItems = document.querySelectorAll('.nav-item');
-    const viewSections = document.querySelectorAll('.view-section');
-
-    if (navItems.length > 0) {
-        navItems.forEach(item => {
-            item.addEventListener('click', (e) => {
-                if (item.tagName === 'A') return;
-                navItems.forEach(nav => nav.classList.remove('active'));
-                item.classList.add('active');
-                const targetId = item.getAttribute('data-target');
-                viewSections.forEach(section => {
-                    if (section.id === targetId) {
-                        section.classList.remove('hidden');
-                        // Matcher no longer needs browser-side ML model
-                        // (uses pre-computed embeddings from crawl_rcard.py)
-                    } else {
-                        section.classList.add('hidden');
-                    }
-                });
-            });
-        });
-    }
 });
 
 // Initialize Application - called from auth.js after login

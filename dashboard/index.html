@@ -44,20 +44,7 @@
                         </p>
                     </div>
 
-                    <!-- Navigation -->
-                    <nav class="flex w-full gap-2 bg-slate-100 p-1.5 rounded-xl">
-                        <button
-                            class="nav-item active flex-1 px-4 py-3 text-base font-bold rounded-lg transition-all duration-200 text-slate-500 hover:bg-white/60 hover:text-slate-700"
-                            data-target="view-dashboard">
-                            📊 Dashboard
-                        </button>
-                        <button
-                            class="nav-item flex-1 px-4 py-3 text-base font-bold rounded-lg transition-all duration-200 text-slate-500 hover:bg-white/60 hover:text-slate-700"
-                            data-target="view-matcher">
-                            🤝 Researcher Matcher (KETI 연구자용)
-                        </button>
-                    </nav>
-                </div>
+                                    </div>
             </div>
         </header>
 
@@ -242,18 +229,6 @@
                 </section>
 
                 <!-- Results Grid Section -->
-                <section class="">
-                    <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        <!-- JS populate cards -->
-                    </div>
-
-                    <!-- Pagination -->
-                    <div id="pagination"
-                        class="flex justify-center items-center gap-2 mt-8 pt-6 border-t border-slate-100">
-                    </div>
-                </section>
-
-                <!-- Network Graph Section -->
                 <section id="networkSection" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                         <div>
@@ -275,7 +250,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                                 </svg>
-                                Generate Graph
+                                네트워크 숨기기
                             </button>
                         </div>
                     </div>
@@ -283,7 +258,7 @@
                     <p id="dashboardCapMsg" class="text-amber-500 font-medium text-sm text-center mb-4 hidden"></p>
 
                     <div id="dashboardViz"
-                        class="w-full h-[600px] bg-slate-50 rounded-xl border border-slate-200 hidden relative"></div>
+                        class="w-full h-[600px] bg-slate-50 rounded-xl border border-slate-200  relative"></div>
 
                     <div id="dashboardLegend" class="flex flex-wrap gap-3 justify-center mt-6 hidden">
                         <div class="legend-item flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium cursor-pointer hover:bg-blue-100 transition-colors"
@@ -304,62 +279,27 @@
                         </div>
                     </div>
 
-                    <div id="dashboardGraphControls" class="hidden flex justify-center gap-3 mt-4">
+                    <div id="dashboardGraphControls" class="flex justify-center gap-3 mt-4">
                         <button onclick="fitDashboardGraph()"
                             class="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-200 transition-colors">Fit
                             Review</button>
                     </div>
                     <div id="dashboardNodePopup"></div>
                 </section>
-            </div>
 
-            <!-- VIEW 2: Researcher Matcher -->
-            <div id="view-matcher" class="view-section hidden">
-                <section
-                    class="bg-white rounded-2xl shadow-sm border border-purple-100 p-8 min-h-[600px] relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-purple-500 to-indigo-500"></div>
+                <section class="">
+                    <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <!-- JS populate cards -->
+                    </div>
 
-                    <div class="max-w-3xl mx-auto">
-                        <div class="mb-8 text-center sm:text-left">
-                            <h2 class="text-2xl font-bold text-slate-900 mb-3">
-                                KETI 연구자 - 싱가포르 과제/ 연구책임자 매칭
-                            </h2>
-                            <p class="text-slate-500 leading-relaxed">
-                                R-Card 주소를 입력하시면 R-Card 내용을 바탕으로 잠재 협력 대상을 보여줍니다.
-                            </p>
-                        </div>
-
-                        <div class="flex flex-col sm:flex-row gap-3 mb-10">
-                            <input type="text" id="matchUrl"
-                                placeholder="R-Card URL (e.g., https://rcard.re.kr/detail/KP-...)"
-                                class="flex-1 p-4 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all shadow-sm">
-                            <button id="matchBtn"
-                                class="bg-purple-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-purple-700 shadow-md hover:shadow-lg transition-all active:scale-95">
-                                Start Matching
-                            </button>
-                        </div>
-
-                        <!-- Researcher Info -->
-                        <div id="researcherInfo"
-                            class="hidden bg-fuchsia-50 border border-fuchsia-100 rounded-xl p-6 mb-8">
-                            <p id="rGreeting" class="text-xl font-bold text-purple-700 mb-3"></p>
-                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <div>
-                                <h3 id="rName" class="text-lg font-bold text-slate-900"></h3>
-                                <p id="rAffiliation" class="text-slate-600 mt-1"></p>
-                            </div>
-                            <a id="rLink" href="#" target="_blank"
-                                class="px-4 py-2 bg-white border border-fuchsia-200 text-fuchsia-700 rounded-lg text-sm font-medium hover:bg-fuchsia-100 transition-colors">
-                                View Profile ↗
-                            </a>
-                            </div>
-                        </div>
-
-                        <h3 class="text-lg font-bold text-slate-700 border-b border-slate-100 pb-3 mb-6">Matching
-                            Results (Top 20)</h3>
-                        <div id="matchResults" class="space-y-4"></div>
+                    <!-- Pagination -->
+                    <div id="pagination"
+                        class="flex justify-center items-center gap-2 mt-8 pt-6 border-t border-slate-100">
                     </div>
                 </section>
+
+                <!-- Network Graph Section -->
+                
             </div>
 
         </main>
@@ -449,12 +389,11 @@
     <script src="/dashboard/js/tracking.js?v=2"></script>
 
     <!-- Dashboard Graph -->
-    <script src="/dashboard/js/dashboard-graph.js?v=2"></script>
+    <script src="/dashboard/js/dashboard-graph.js?v=3"></script>
 
     <!-- Custom JS -->
     <script type="module" src="/dashboard/js/ai-search.js"></script>
-    <script type="module" src="/dashboard/js/matcher.js"></script>
-    <script src="/dashboard/js/app.js?v=2"></script>
+    <script src="/dashboard/js/app.js?v=3"></script>
 </body>
 
 </html>
