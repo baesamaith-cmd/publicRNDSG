@@ -78,6 +78,7 @@ function buildGraphData(projects) {
             nodesMap.set(projId, { id: projId, label: p.id || 'Project', nodeType: 'Project', ...DASH_NODE_STYLES.Project });
             dashNodeDataMap.set(projId, {
                 type: 'Project',
+                fullName: p.title || p.id,
                 search: `${p.id} ${p.title} ${p.kw || ''}`,
                 properties: { id: p.id, title: p.title, status: p.status, pi: p.pi, inst: p.inst, date: p.date, dur: p.dur }
             });
@@ -88,7 +89,7 @@ function buildGraphData(projects) {
             const instId = 'inst_' + p.inst;
             if (!nodesMap.has(instId)) {
                 nodesMap.set(instId, { id: instId, label: p.inst.length > 25 ? p.inst.substring(0, 25) + '...' : p.inst, nodeType: 'Institution', ...DASH_NODE_STYLES.Institution });
-                dashNodeDataMap.set(instId, { type: 'Institution', search: p.inst, properties: { name: p.inst } });
+                dashNodeDataMap.set(instId, { type: 'Institution', fullName: p.inst, search: p.inst, properties: { name: p.inst } });
             }
             edges.push({ id: 'e' + (edgeId++), from: projId, to: instId, ...DASH_EDGE_STYLES.HOSTED_BY, arrows: { to: { enabled: true, scaleFactor: 0.5 } }, smooth: { type: 'continuous' } });
         }
@@ -98,7 +99,7 @@ function buildGraphData(projects) {
             const piId = 'pi_' + p.pi;
             if (!nodesMap.has(piId)) {
                 nodesMap.set(piId, { id: piId, label: p.pi, nodeType: 'Person', ...DASH_NODE_STYLES.Person });
-                dashNodeDataMap.set(piId, { type: 'Person', search: `${p.pi} ${p.inst}`, properties: { name: p.pi, institution: p.inst } });
+                dashNodeDataMap.set(piId, { type: 'Person', fullName: p.pi, search: `${p.pi} ${p.inst}`, properties: { name: p.pi, institution: p.inst } });
             }
             edges.push({ id: 'e' + (edgeId++), from: piId, to: projId, ...DASH_EDGE_STYLES.LEADS, arrows: { to: { enabled: true, scaleFactor: 0.5 } }, smooth: { type: 'continuous' } });
         }
@@ -111,7 +112,7 @@ function buildGraphData(projects) {
                 const topicId = 'topic_' + kw;
                 if (!nodesMap.has(topicId)) {
                     nodesMap.set(topicId, { id: topicId, label: kw.length > 20 ? kw.substring(0, 20) + '...' : kw, nodeType: 'Topic', ...DASH_NODE_STYLES.Topic });
-                    dashNodeDataMap.set(topicId, { type: 'Topic', search: kw, properties: { name: kw, count: topicFreq[kw] } });
+                    dashNodeDataMap.set(topicId, { type: 'Topic', fullName: kw, search: kw, properties: { name: kw, count: topicFreq[kw] } });
                 }
                 edges.push({ id: 'e' + (edgeId++), from: projId, to: topicId, ...DASH_EDGE_STYLES.TAGGED, arrows: { to: { enabled: true, scaleFactor: 0.5 } }, smooth: { type: 'continuous' } });
             });
@@ -325,7 +326,7 @@ function showDashboardNodePopup(raw, visNode) {
             </div>
             <button onclick="closeDashboardNodePopup()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#94a3b8;line-height:1;">&times;</button>
         </div>
-        <h3 style="font-size:1.1rem;font-weight:700;color:#1e293b;margin-bottom:14px;line-height:1.4;">${visNode.label}</h3>
+        <h3 style="font-size:1.1rem;font-weight:700;color:#1e293b;margin-bottom:14px;line-height:1.4;">${raw.fullName || visNode.label}</h3>
         <table style="width:100%;border-collapse:collapse;">${propsHtml}</table>
         ${connectionsHtml}
     `;
@@ -348,7 +349,7 @@ function renderConnectionsHtml(visNodeId) {
         if (t === 'Project') sub = [p.title, p.status].filter(Boolean).join(' · ');
         else if (t === 'Person') sub = p.institution || '';
         else if (t === 'Topic') sub = p.count ? `${p.count}회 등장` : '';
-        groups[t].push({ id, label: nodeItem.label, sub });
+        groups[t].push({ id, label: raw.fullName || nodeItem.label, sub });
     });
 
     window.__dashConnIndex = [];
