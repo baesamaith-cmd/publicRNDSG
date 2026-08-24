@@ -364,3 +364,37 @@
   color: #64748b !important;
   border-color: #94a3b8;
 }
+
+/* === Tone pass: minimal light (Better Stack inspired) === */
+body { background: #fff !important; }
+
+.site-header {
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid #eef0f3 !important;
+  box-shadow: none !important;
+}
+.h1-tone {
+  font-size: clamp(26px, 2.4vw, 33px) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em;
+  line-height: 1.25 !important;
+  color: #0f172a !important;
+  background-image: none !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+.sub-tone {
+  margin-top: 6px !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  color: #667085 !important;
+}
+
+/* Unify card sections: hairline border instead of heavy shadows/ring */
+.view-section > section.bg-white {
+  background: #fff !important;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04) !important;
+  border: 1px solid #e9edf2 !important;
+}
+#chartsSection .chart-container { border-color: #e9edf2 !important; }
