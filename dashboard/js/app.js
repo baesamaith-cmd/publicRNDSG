@@ -11,6 +11,7 @@ let currentSort = { field: 'date', order: 'desc' };
 
 // UI Elements
 let institutionSelect, piSelect;
+let restoringFilters = false;
 let barChart, lineChart, pieChart;
 let modalChart = null;
 
@@ -126,7 +127,15 @@ document.addEventListener('DOMContentLoaded', () => {
 async function initApp() {
     await loadData();
     initializeUI();
-    applyFilters();
+    const restored = restoreFiltersFromURL();
+    if (restored && new URLSearchParams(location.search).get('ai') === '1')
+        document.getElementById('aiSearchToggle').dispatchEvent(new Event('change'));
+    if (restored) {
+        // Wait out the restore-suppression window before the first real filter pass.
+        setTimeout(() => applyFilters(), 950);
+    } else {
+        applyFilters();
+    }
 }
 
 // API Configuration
@@ -412,6 +421,9 @@ function initEventListeners() {
     // Reset button
     document.getElementById('resetBtn').addEventListener('click', resetFilters);
 
+    // Share link
+    document.getElementById('shareBtn').addEventListener('click', copyShareLink);
+
     // Sort Dropdown
     document.getElementById('sortSelect').addEventListener('change', (e) => {
         const [field, order] = e.target.value.split('-');
@@ -454,6 +466,7 @@ function initEventListeners() {
 
 // Apply Filters
 async function applyFilters() {
+    if (restoringFilters) return;
     const selectedInstitutions = institutionSelect.getValue(true);
     const selectedPIs = piSelect.getValue(true);
     const keywords = document.getElementById('keywordInput').value.toLowerCase().split(/[\s,]+/).filter(Boolean);
@@ -513,6 +526,98 @@ async function applyFilters() {
 
     // Update dashboard network graph
     if (typeof updateDashboardGraph === 'function') updateDashboardGraph(filteredProjects);
+
+    syncURLFromFilters();
+}
+
+function getFilterParams() {
+    const p = new URLSearchParams();
+    const q = document.getElementById('keywordInput').value.trim();
+    if (q) p.set('q', q);
+    if (document.getElementById('aiSearchToggle').checked) p.set('ai', '1');
+    const inst = institutionSelect.getValue(true);
+    if (inst.length) p.set('inst', inst.join(','));
+    const pis = piSelect.getValue(true);
+    if (pis.length) p.set('pi', pis.join(','));
+    const st = [...document.querySelectorAll('#statusFilters input:checked')].map(cb => cb.value);
+    if (st.length) p.set('st', st.join(','));
+    const df = document.getElementById('dateFrom').value;
+    if (df) p.set('df', df);
+    const dt = document.getElementById('dateTo').value;
+    if (dt) p.set('dt', dt);
+    const dmin = document.getElementById('durationMin').value;
+    if (dmin) p.set('dmin', dmin);
+    const dmax = document.getElementById('durationMax').value;
+    if (dmax) p.set('dmax', dmax);
+    return p;
+}
+
+function syncURLFromFilters() {
+    const qs = getFilterParams().toString();
+    history.replaceState(null, '', qs ? '?' + qs : location.pathname);
+}
+
+function restoreFiltersFromURL() {
+    const p = new URLSearchParams(location.search);
+    if (![...p.keys()].length) return false;
+
+    restoringFilters = true;
+
+    const q = p.get('q');
+    if (q !== null) document.getElementById('keywordInput').value = q;
+    if (p.get('ai') === '1') document.getElementById('aiSearchToggle').checked = true;
+
+    const inst = p.get('inst');
+    if (inst && institutionSelect) institutionSelect.setValue(inst.split(','));
+
+    const pis = p.get('pi');
+    if (pis && piSelect) piSelect.setValue(pis.split(','));
+
+    const st = p.get('st');
+    if (st !== null) {
+        const wanted = new Set(st.split(','));
+        document.querySelectorAll('#statusFilters input[type="checkbox"]').forEach(cb => {
+            cb.checked = wanted.has(cb.value);
+        });
+    }
+
+    const df = p.get('df');
+    if (df && document.getElementById('dateFrom')._flatpickr)
+        document.getElementById('dateFrom')._flatpickr.setDate(df, false);
+    const dtv = p.get('dt');
+    if (dtv && document.getElementById('dateTo')._flatpickr)
+        document.getElementById('dateTo')._flatpickr.setDate(dtv, false);
+
+    const dmin = p.get('dmin');
+    if (dmin !== null) document.getElementById('durationMin').value = dmin;
+    const dmax = p.get('dmax');
+    if (dmax !== null) document.getElementById('durationMax').value = dmax;
+
+    setTimeout(() => { restoringFilters = false; }, 900);
+    return true;
+}
+
+let toastTimer;
+async function copyShareLink() {
+    try {
+        await navigator.clipboard.writeText(location.href);
+        showToast('링크가 복사되었습니다');
+    } catch (e) {
+        window.prompt('아래 링크를 복사하세요:', location.href);
+    }
+}
+function showToast(msg) {
+    let el = document.getElementById('shareToast');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'shareToast';
+        el.className = 'share-toast';
+        document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    requestAnimationFrame(() => el.classList.add('show'));
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
 }
 
 // Sort Projects
