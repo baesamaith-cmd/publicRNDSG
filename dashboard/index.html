@@ -27,6 +27,41 @@
 
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
+    <!-- Structured data (SEO + GEO) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "name": "싱가포르 기술 협력 파트너 검색시스템",
+          "alternateName": "SG-KR Tech Partner Finder",
+          "url": "https://techpartners.site/dashboard/",
+          "inLanguage": "ko",
+          "description": "싱가포르 공공연구 과제 6,130건 키워드·AI 시맨틱 검색 및 협력 네트워크 그래프"
+        },
+        {
+          "@type": "Dataset",
+          "name": "Singapore Awarded Research Grants (2006–2026)",
+          "description": "6,130 awarded research projects from Singapore's IGMS portal, including project ID, title, status, principal investigator, host institution, award date, duration, abstract and keywords for NRF, MOE, MOH/NMRC, A*STAR and other agencies.",
+          "url": "https://techpartners.site/dashboard/",
+          "isAccessibleForFree": true,
+          "inLanguage": ["ko", "en"],
+          "keywords": ["Singapore", "research grants", "R&D", "NRF", "MOE", "MOH", "A*STAR", "기술 협력", "공공연구과제"],
+          "creator": [
+            {"@type": "Organization", "name": "National Research Foundation (NRF)"},
+            {"@type": "Organization", "name": "Ministry of Education (MOE)"},
+            {"@type": "Organization", "name": "Ministry of Health / NMRC"},
+            {"@type": "Organization", "name": "A*STAR"}
+          ],
+          "temporalCoverage": "2006/2026",
+          "variableMeasured": ["Project Title", "Principal Investigator", "Host Institution", "Award Date", "Status", "Abstract", "Keywords"],
+          "license": "https://www.researchgrant.gov.sg"
+        }
+      ]
+    }
+    </script>
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,6 +79,15 @@
 </head>
 
 <body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-indigo-100 selection:text-indigo-700">
+    <noscript>
+        <div style="max-width:760px;margin:40px auto;padding:24px;font-family:sans-serif;line-height:1.7;">
+            <h1>싱가포르 기술 협력 파트너 검색시스템</h1>
+            <p>싱가포르 정부 IGMS 포털(researchgrant.gov.sg)의 수상 공공연구 과제 <strong>6,130건(2006–2026)</strong>을
+            검색할 수 있는 시스템입니다. NRF·MOE·MOH/NMRC·A*STAR 등의 지원 과제에 대해 과제번호, 과제명, 연구책임자,
+            수행기관, 시작일, 상태, 초록, 키워드를 제공하며, AI 시맨틱 검색과 기관–과제–연구자–주제 네트워크 그래프를 지원합니다.
+            이 기능을 사용하려면 브라우저에서 JavaScript를 활성화해 주세요.</p>
+        </div>
+    </noscript>
 
     <!-- Main Container -->
     <div id="mainContainer" class="min-h-screen pb-12">
@@ -314,6 +358,16 @@
             </div>
 
         </main>
+
+        <footer class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
+            <div style="border-top:1px solid #eef0f3;padding-top:16px;font-size:12px;color:#98a2b3;line-height:1.8;">
+                데이터 출처: 싱가포르 정부 IGMS(Integrated Grant Management System,
+                <a href="https://www.researchgrant.gov.sg/Grant/Awarded" rel="noopener" style="color:#667085;">researchgrant.gov.sg</a>)
+                수상 과제 공개 정보 6,130건 (2006–2026).
+                주요 지원기관: NRF · MOE · MOH/NMRC · A*STAR.
+                검색·시각화 기능은 브라우저에서 직접 동작하며 별도 로그인이 필요하지 않습니다.
+            </div>
+        </footer>
 
         <!-- Loading Overlay -->
         <div id="loadingOverlay"
