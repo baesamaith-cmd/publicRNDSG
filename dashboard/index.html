@@ -459,15 +459,36 @@
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3-cloud@1.2.5/build/d3.layout.cloud.min.js"></script>
 
-    <!-- Tracking -->
-    <script src="/dashboard/js/tracking.js?v=2"></script>
+    <section aria-label="방문 통계 설정" class="mx-auto max-w-7xl px-6 py-4 text-sm text-slate-600">
+        <div id="analytics-consent" hidden>
+            <p>Google Analytics로 방문과 검색 완료 횟수를 집계합니다. 허용하면 쿠키 등 식별자를 사용할 수 있습니다.
+                검색어·연구자명·이메일·업로드 내용은 전송하지 않습니다. 거절해도 검색을 사용할 수 있습니다.</p>
+            <button id="analytics-allow" type="button" class="rounded border px-4 py-2">허용</button>
+            <button id="analytics-deny" type="button" class="rounded border px-4 py-2">거절</button>
+        </div>
+        <button id="analytics-settings" type="button" class="underline">방문 통계 설정 변경</button>
+        <span id="analytics-status" aria-live="polite"></span>
+        <details class="mt-2">
+            <summary>방문 통계·개인정보 안내</summary>
+            <p>서비스 개선을 위해 동의한 브라우저에서만 Google Analytics를 사용합니다. 전송 대상은 Google이며,
+                페이지 방문·검색 완료의 방식과 결과 개수 구간, 기본 세션·기기·대략적 지역 정보를 처리합니다.
+                페이지 주소의 검색 매개변수와 해시는 제거하고 유입 주소는 도메인만 전송합니다.
+                검색 원문·연구자명·이메일·계정 ID·업로드 내용은 전송하지 않습니다. 광고 연결은 사용하지 않습니다.</p>
+            <p>분석 쿠키의 만료는 최대 30일로 설정하며, 이벤트 데이터 보유기간은 GA4 설정에서 2개월로 맞춥니다.
+                위 설정 변경에서 언제든 거절할 수 있고, 철회하면 이후 분석 전송이 중지됩니다.
+                거절·미선택 중에는 분석 스크립트와 분석 요청을 보내지 않습니다.</p>
+            <a href="https://policies.google.com/privacy" rel="noopener">Google 개인정보처리방침</a>
+        </details>
+    </section>
+    <!-- Analytics loads only after explicit consent. -->
+    <script src="/dashboard/js/tracking.js?v=3" data-measurement-id="G-B9YLRRR5ZG"></script>
 
     <!-- Dashboard Graph -->
     <script src="/dashboard/js/dashboard-graph.js?v=4"></script>
 
     <!-- Custom JS -->
     <script type="module" src="/dashboard/js/ai-search.js"></script>
-    <script src="/dashboard/js/app.js?v=5"></script>
+    <script src="/dashboard/js/app.js?v=6"></script>
 </body>
 
 </html>

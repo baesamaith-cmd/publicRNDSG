@@ -391,7 +391,7 @@ function initEventListeners() {
     document.getElementById('piSelect').addEventListener('change', debouncedApplyFilters);
 
     // Keyword input
-    document.getElementById('keywordInput').addEventListener('input', debounce(applyFilters, 500));
+    document.getElementById('keywordInput').addEventListener('input', debounce(() => applyFilters(true), 500));
 
     // AI Toggle
     document.getElementById('aiSearchToggle').addEventListener('change', async (e) => {
@@ -465,8 +465,9 @@ function initEventListeners() {
 }
 
 // Apply Filters
-async function applyFilters() {
+async function applyFilters(trackCompletedSearch = false) {
     if (restoringFilters) return;
+    const analyticsInputAtStart = document.getElementById('keywordInput').value;
     const selectedInstitutions = institutionSelect.getValue(true);
     const selectedPIs = piSelect.getValue(true);
     const keywords = document.getElementById('keywordInput').value.toLowerCase().split(/[\s,]+/).filter(Boolean);
@@ -518,8 +519,10 @@ async function applyFilters() {
 
     currentPage = 1;
     renderCards();
-    // Track search/filter event
-    window.trackEvent('search', { query: keywords.join(' '), ai_enabled: isAIEnabled, results_count: filteredProjects.length, filters: { institutions: selectedInstitutions, statuses: selectedStatuses, dateFrom, dateTo } });
+    // Count completed debounced keyword input, not initial loads or filter/chart updates.
+    if (trackCompletedSearch === true && keywords.length > 0 && document.getElementById('keywordInput').value === analyticsInputAtStart) {
+        window.trackEvent('search_complete', { search_mode: isAIEnabled ? 'semantic' : 'keyword', result_count: filteredProjects.length });
+    }
     renderCards();
     updateCharts();
     updateResultsCount();
