@@ -174,6 +174,9 @@ async function loadData() {
 
 // Initialize UI Components
 function initializeUI() {
+    document.getElementById('totalProjectMetric').textContent = allProjects.length.toLocaleString();
+    document.getElementById('totalInstitutionMetric').textContent = new Set(allProjects.map(p => p.inst).filter(Boolean)).size.toLocaleString();
+    document.getElementById('totalResearcherMetric').textContent = new Set(allProjects.map(p => p.pi).filter(Boolean)).size.toLocaleString();
     initSelects();
     initStatusFilters();
     initDatePickers();
@@ -209,6 +212,8 @@ function initSelects() {
         shouldSort: false,
         allowHTML: true // Fix deprecation warning
     });
+    document.querySelector('#institutionSelect').closest('.choices').setAttribute('aria-label', '수행기관');
+    document.querySelector('#piSelect').closest('.choices').setAttribute('aria-label', '연구책임자');
 }
 
 // Update PI Options
@@ -273,6 +278,14 @@ function initDatePickers() {
 
 // Initialize Charts
 function initCharts() {
+    Chart.defaults.font.family = 'Inter, -apple-system, sans-serif';
+    Chart.defaults.font.size = 10;
+    Chart.defaults.color = '#657985';
+    Chart.defaults.borderColor = '#edf1f4';
+    Chart.defaults.plugins.legend.labels.boxWidth = 9;
+    Chart.defaults.plugins.legend.labels.boxHeight = 9;
+    Chart.defaults.plugins.legend.labels.padding = 12;
+
     const integerTicksConfig = {
         beginAtZero: true,
         ticks: {
@@ -289,7 +302,7 @@ function initCharts() {
     const barCtx = document.getElementById('barChart').getContext('2d');
     barChart = new Chart(barCtx, {
         type: 'bar',
-        data: { labels: [], datasets: [{ label: 'Projects', data: [], backgroundColor: '#2563eb' }] },
+        data: { labels: [], datasets: [{ label: 'Projects', data: [], backgroundColor: '#427f92', borderRadius: 3 }] },
         options: {
             responsive: true,
             maintainAspectRatio: false,
@@ -310,7 +323,7 @@ function initCharts() {
     const lineCtx = document.getElementById('lineChart').getContext('2d');
     lineChart = new Chart(lineCtx, {
         type: 'line',
-        data: { labels: [], datasets: [{ label: 'Projects', data: [], borderColor: '#22c55e', backgroundColor: 'rgba(34, 197, 94, 0.1)', fill: true, pointRadius: 5, pointHoverRadius: 8 }] },
+        data: { labels: [], datasets: [{ label: 'Projects', data: [], borderColor: '#2b817a', backgroundColor: 'rgba(43, 129, 122, 0.08)', fill: true, pointRadius: 2, pointHoverRadius: 5, borderWidth: 2, tension: .25 }] },
         options: {
             responsive: true,
             maintainAspectRatio: false,
@@ -331,7 +344,7 @@ function initCharts() {
     const pieCtx = document.getElementById('pieChart').getContext('2d');
     pieChart = new Chart(pieCtx, {
         type: 'doughnut',
-        data: { labels: [], datasets: [{ data: [], backgroundColor: ['#2563eb', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6'] }] },
+        data: { labels: [], datasets: [{ data: [], backgroundColor: ['#6989a0', '#2b817a', '#c99b51', '#af6f69', '#7c7fa3'] }] },
         options: {
             responsive: true,
             maintainAspectRatio: false,
@@ -382,6 +395,11 @@ function initCharts() {
 // Initialize Event Listeners
 function initEventListeners() {
     const debouncedApplyFilters = debounce(applyFilters, 300);
+    document.querySelectorAll('.primary-nav a').forEach(link => {
+        link.addEventListener('click', () => {
+            document.querySelectorAll('.primary-nav a').forEach(item => item.classList.toggle('nav-current', item === link));
+        });
+    });
 
     // Select changes
     document.getElementById('institutionSelect').addEventListener('change', () => {
@@ -392,6 +410,36 @@ function initEventListeners() {
 
     // Keyword input
     document.getElementById('keywordInput').addEventListener('input', debounce(() => applyFilters(true), 500));
+    document.querySelectorAll('[data-search]').forEach(button => {
+        button.addEventListener('click', () => {
+            document.getElementById('keywordInput').value = button.dataset.search;
+            applyFilters(true);
+        });
+    });
+    document.getElementById('keywordInput').addEventListener('keydown', event => {
+        if (event.key === 'Enter') applyFilters(true);
+    });
+    document.querySelectorAll('.chart-container').forEach(container => {
+        container.tabIndex = 0;
+        container.setAttribute('role', 'button');
+        container.setAttribute('aria-label', `${container.querySelector('h3').textContent.trim()} 확대`);
+        container.addEventListener('keydown', event => {
+            if (event.target === container && (event.key === 'Enter' || event.key === ' ')) {
+                event.preventDefault();
+                container.click();
+            }
+        });
+    });
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', event => {
+            if (event.target === modal.firstElementChild) {
+                if (modal.id === 'detailModal') closeModal();
+                else if (modal.id === 'chartModal') closeChartModal();
+                else closeWordCloudModal();
+            }
+        });
+    });
+
 
     // AI Toggle
     document.getElementById('aiSearchToggle').addEventListener('change', async (e) => {
@@ -427,6 +475,7 @@ function initEventListeners() {
     // Sort Dropdown
     document.getElementById('sortSelect').addEventListener('change', (e) => {
         const [field, order] = e.target.value.split('-');
+        currentPage = 1;
         sortProjects(field, order);
         renderCards();
     });
@@ -514,7 +563,7 @@ async function applyFilters(trackCompletedSearch = false) {
     if (isAIEnabled && keywords.length > 0) {
         filteredProjects.sort((a, b) => (b._aiScore || 0) - (a._aiScore || 0));
     } else {
-        sortProjects('date', 'desc');
+        sortProjects(currentSort.field, currentSort.order);
     }
 
     currentPage = 1;
@@ -596,6 +645,8 @@ function restoreFiltersFromURL() {
     const dmax = p.get('dmax');
     if (dmax !== null) document.getElementById('durationMax').value = dmax;
 
+    const hasStatusFilter = [...document.querySelectorAll('#statusFilters input')].some(cb => !cb.checked);
+    if (hasStatusFilter || df || dtv || dmin || dmax) document.getElementById('advancedFilters').open = true;
     setTimeout(() => { restoringFilters = false; }, 900);
     return true;
 }
@@ -636,8 +687,8 @@ function sortProjects(field, order) {
             valA = a.durNum;
             valB = b.durNum;
         } else {
-            valA = (a[field] || '').toLowerCase();
-            valB = (b[field] || '').toLowerCase();
+            valA = (a[field] || '').trim().toLowerCase();
+            valB = (b[field] || '').trim().toLowerCase();
         }
         if (valA < valB) return order === 'asc' ? -1 : 1;
         if (valA > valB) return order === 'asc' ? 1 : -1;
@@ -656,8 +707,8 @@ function sortProjects(field, order) {
                 valA = a.durNum;
                 valB = b.durNum;
             } else {
-                valA = (a[field] || '').toLowerCase();
-                valB = (b[field] || '').toLowerCase();
+                valA = (a[field] || '').trim().toLowerCase();
+                valB = (b[field] || '').trim().toLowerCase();
             }
             if (valA < valB) return order === 'asc' ? -1 : 1;
             if (valA > valB) return order === 'asc' ? 1 : -1;
@@ -681,24 +732,28 @@ function renderCards() {
     const end = start + itemsPerPage;
     const pageData = filteredProjects.slice(start, end);
 
+    if (!pageData.length) {
+        grid.innerHTML = '<div class="empty-state"><h3>검색 결과가 없습니다</h3><p>다른 키워드를 입력하거나 검색 조건을 넓혀보세요.</p><button type="button" id="emptyResetBtn">모든 필터 초기화</button></div>';
+        document.getElementById('emptyResetBtn').addEventListener('click', resetFilters);
+        renderPagination();
+        return;
+    }
     grid.innerHTML = pageData.map(p => `
-    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 hover:shadow-md transition-all cursor-pointer group flex flex-col h-full relative" data-id="${p.id}">
+    <div class="project-card bg-white rounded-xl shadow-sm border border-slate-100 p-5 hover:shadow-md transition-all cursor-pointer group flex flex-col h-full relative" data-id="${p.id}">
         <div class="flex justify-between items-start mb-3">
             <span class="status-badge ${getStatusClass(p.status)} text-xs">${p.status || ''}</span>
             <span class="text-xs text-slate-400 font-mono">#${p.id}</span>
         </div>
         
-        <h3 class="text-slate-800 font-bold text-lg mb-3 line-clamp-2 group-hover:text-indigo-600 transition-colors" title="${escapeHtml(p.title || '')}">
-            ${escapeHtml(p.title || 'No Title')}
-        </h3>
+        <h3><button type="button" class="project-title line-clamp-3" title="${escapeHtml(p.title || '')}">${escapeHtml(p.title || 'No Title')}</button></h3>
         
         <div class="mt-auto space-y-2.5 text-sm text-slate-600">
             <div class="flex items-center gap-2 text-xs">
                 <span class="font-semibold text-slate-700 truncate max-w-[60%]" title="${escapeHtml(p.inst || '')}">${escapeHtml(p.inst || '')}</span>
                 <span class="text-slate-300">|</span>
-                <span class="text-indigo-600 hover:text-indigo-800 transition-colors font-medium truncate flex-1 pi-link" data-pi="${escapeHtml(p.pi || '')}" title="${escapeHtml(p.pi || '')}">
+                <button type="button" class="text-indigo-600 hover:text-indigo-800 transition-colors font-medium truncate flex-1 pi-link" data-pi="${escapeHtml(p.pi || '')}" title="${escapeHtml(p.pi || '')}">
                     ${escapeHtml(p.pi || 'Unknown')}
-                </span>
+                </button>
             </div>
             <div class="flex items-center gap-3 text-xs text-slate-500 pt-3 border-t border-slate-50 mt-1">
                <div class="flex items-center gap-1.5">
@@ -707,7 +762,7 @@ function renderCards() {
                </div>
                <div class="flex items-center gap-1.5 ml-auto">
                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                   <span>${(p.dur || '0').toString().toLowerCase().match(/mo|non/) ? p.dur : (p.dur || '0') + 'mo'}</span>
+                   <span>${!p.dur || p.dur === 'None' ? '기간 미제공' : escapeHtml(String(p.dur)) + (/mo/i.test(p.dur) ? '' : '개월')}</span>
                </div>
             </div>
         </div>
@@ -742,7 +797,8 @@ function getStatusClass(status) {
     if (!status) return '';
     const s = status.toLowerCase();
     if (s.includes('progress')) return 'in-progress';
-    if (s.includes('complete')) return 'completed';
+    if (s.includes('complete') || s === 'closed') return 'completed';
+    if (s.includes('pending')) return 'pending';
     return '';
 }
 
@@ -772,7 +828,7 @@ function renderPagination() {
     }
 
     for (let i = startPage; i <= endPage; i++) {
-        html += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+        html += `<button class="${i === currentPage ? 'active' : ''}" ${i === currentPage ? 'aria-current="page"' : ''} onclick="goToPage(${i})">${i}</button>`;
     }
 
     if (endPage < totalPages) {
@@ -795,7 +851,7 @@ window.goToPage = goToPage;
 
 // Update Results Count
 function updateResultsCount() {
-    document.getElementById('resultsCount').textContent = `전체 ${allProjects.length.toLocaleString()}개 중 ${filteredProjects.length.toLocaleString()}개 표시`;
+    document.getElementById('resultsCount').textContent = `${filteredProjects.length.toLocaleString()}건 / 전체 ${allProjects.length.toLocaleString()}건`;
 }
 
 // Update Charts
@@ -836,7 +892,9 @@ function updateCharts() {
     }
 
     // Update bar chart title
-    document.querySelector('#barChart').closest('.chart-container').querySelector('h3').textContent = barChartTitle;
+    const barContainer = document.querySelector('#barChart').closest('.chart-container');
+    barContainer.querySelector('h3').textContent = barChartTitle;
+    barContainer.setAttribute('aria-label', `${barChartTitle} 확대`);
 
     barChart.data.labels = barLabels;
     barChart.data.datasets[0].data = barData;
@@ -862,6 +920,7 @@ function updateCharts() {
     });
     pieChart.data.labels = Object.keys(statusCounts);
     pieChart.data.datasets[0].data = Object.values(statusCounts);
+    pieChart.data.datasets[0].backgroundColor = pieChart.data.labels.map(status => ({ 'in-progress': '#2b817a', completed: '#6989a0', pending: '#c99b51' }[getStatusClass(status)] || '#7c7fa3'));
     pieChart.update();
 
     // Word Cloud - Keywords
@@ -913,17 +972,17 @@ function updateWordCloud() {
     }));
 
     const width = container.offsetWidth || 280;
-    const height = 200;
+    const height = container.clientHeight || 180;
 
     // Color palette
-    const colors = ['#2563eb', '#7c3aed', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899'];
+    const colors = ['#1b6b70', '#436d91', '#508c85', '#917e54', '#6d8194'];
 
     // Create word cloud layout
     const layout = d3.layout.cloud()
         .size([width, height])
         .words(words)
         .padding(3)
-        .rotate(() => (Math.random() > 0.5 ? 0 : 90) * (Math.random() > 0.8 ? 1 : 0))
+        .rotate(() => 0)
         .font('Arial')
         .fontSize(d => d.size)
         .on('end', draw);
@@ -989,7 +1048,7 @@ function openWordCloudModal() {
 
     if (sortedKw.length === 0) {
         container.innerHTML = '<p style="color: var(--text-secondary); font-size: 1rem; text-align: center; padding: 50px;">키워드 없음</p>';
-        document.getElementById('wordCloudModal').classList.add('active');
+        activateModal('wordCloudModal');
         return;
     }
 
@@ -1007,7 +1066,7 @@ function openWordCloudModal() {
     const height = 450;
 
     // Color palette
-    const colors = ['#2563eb', '#7c3aed', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899'];
+    const colors = ['#1b6b70', '#436d91', '#508c85', '#917e54', '#6d8194'];
 
     // Create word cloud layout
     const layout = d3.layout.cloud()
@@ -1052,13 +1111,39 @@ function openWordCloudModal() {
             .text(d => `${d.text}: ${d.count}개 과제 (클릭하여 검색)`);
     }
 
-    document.getElementById('wordCloudModal').classList.add('active');
+    activateModal('wordCloudModal');
 }
 
 // Close Word Cloud Modal
 function closeWordCloudModal() {
-    document.getElementById('wordCloudModal').classList.remove('active');
+    deactivateModal('wordCloudModal');
 }
+
+const modalFocusOrigins = new Map();
+function activateModal(id) {
+    const modal = document.getElementById(id);
+    modalFocusOrigins.set(id, document.activeElement);
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    modal.querySelector('button[aria-label="닫기"]')?.focus();
+}
+function deactivateModal(id) {
+    const modal = document.getElementById(id);
+    if (!modal.classList.contains('active')) return;
+    modal.classList.remove('active');
+    if (!document.querySelector('.modal.active')) document.body.style.overflow = '';
+    modalFocusOrigins.get(id)?.focus();
+    modalFocusOrigins.delete(id);
+}
+document.addEventListener('keydown', event => {
+    if (event.key !== 'Tab') return;
+    const modal = document.querySelector('.modal.active');
+    if (!modal) return;
+    const focusable = [...modal.querySelectorAll('button, a[href], input, select, [tabindex="0"]')].filter(el => el.getClientRects().length);
+    const first = focusable[0], last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+});
 
 // Show Detail Modal
 function showDetail(projectId) {
@@ -1171,12 +1256,12 @@ function showDetail(projectId) {
         </div>
     `;
 
-    document.getElementById('detailModal').classList.add('active');
+    activateModal('detailModal');
 }
 
 // Close Modal
 function closeModal() {
-    document.getElementById('detailModal').classList.remove('active');
+    deactivateModal('detailModal');
 }
 
 // Open Chart Modal
@@ -1296,12 +1381,12 @@ function openChartModal(chartId, title) {
     }
 
     modalChart = new Chart(modalCtx, chartConfig);
-    document.getElementById('chartModal').classList.add('active');
+    activateModal('chartModal');
 }
 
 // Close Chart Modal
 function closeChartModal() {
-    document.getElementById('chartModal').classList.remove('active');
+    deactivateModal('chartModal');
     if (modalChart) {
         modalChart.destroy();
         modalChart = null;

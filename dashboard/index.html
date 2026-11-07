@@ -79,10 +79,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
     <!-- Tailwind CSS (Built) -->
-    <link href="/dashboard/css/output.css" rel="stylesheet">
+    <link href="/dashboard/css/output.css?v=11" rel="stylesheet">
 
     <!-- Custom CSS (Overrides & Libraries) -->
-    <link rel="stylesheet" href="/dashboard/css/style.css?v=10">
+    <link rel="stylesheet" href="/dashboard/css/style.css?v=12">
 </head>
 
 <body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-indigo-100 selection:text-indigo-700">
@@ -99,153 +99,79 @@
     <!-- Main Container -->
     <div id="mainContainer" class="min-h-screen pb-12">
 
-        <!-- Header -->
-        <!-- Header -->
-        <header class="site-header sticky top-0 z-40">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="py-4 space-y-4">
-                    <div class="flex justify-between items-start">
-                    <div class="inline-block text-left">
-                        <h1
-                            class="h1-tone whitespace-nowrap">
-                            싱가포르 기술 협력 파트너 검색시스템
-                        </h1>
-                        <p class="sub-tone tracking-wide whitespace-nowrap"
-                            style="display:flex;justify-content:space-between;gap:6px;">
-                            <span>2006-2026</span><span>•</span><span>6,130 PROJECTS</span><span>•</span><span>NRF / MOH / MOE / A*STAR</span>
-                        </p>
-                    </div>
-
-                                    </div>
+        <a class="skip-link" href="#searchSection">검색으로 바로가기</a>
+        <header class="site-header">
+            <div class="workspace header-inner">
+                <a class="brand" href="/dashboard/" aria-label="TechPartners 홈">
+                    <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M8 9h10v10H8zM14 15h10v10H14z" stroke="currentColor" stroke-width="2.5"/><path d="M18 9h6v6" stroke="currentColor" stroke-width="2.5"/></svg></span>
+                    <span>Tech<span class="brand-light">Partners</span><small>SINGAPORE · KOREA</small></span>
+                </a>
+                <nav class="primary-nav" aria-label="주요 메뉴">
+                    <a href="#searchSection" class="nav-current">연구 과제 탐색</a>
+                    <a href="#insightsSection">연구 인사이트</a>
+                    <a href="#networkSection">협력 네트워크</a>
+                </nav>
+                <span class="header-note"><span aria-hidden="true"></span>공공연구 데이터 기반</span>
             </div>
         </header>
 
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style="margin-top:40px">
+        <main class="workspace">
+            <section class="intro" aria-labelledby="pageTitle">
+                <div class="intro-copy">
+                    <p class="eyebrow">RESEARCH INTELLIGENCE / SG → KR</p>
+                    <h1 id="pageTitle">연구를 발견하고,<br>협력의 가능성을 연결하세요.</h1>
+                    <p class="intro-description">싱가포르 공공연구 과제에서 기술과 사람을 찾고,<br class="desktop-break"> 새로운 협력 파트너를 탐색하세요.</p>
+                </div>
+                <div class="dataset-overview">
+                    <p class="dataset-label">SINGAPORE RESEARCH LANDSCAPE <span>2006–2026</span></p>
+                    <div class="dataset-metrics">
+                        <div><strong id="totalProjectMetric">—</strong><span>연구 과제</span></div>
+                        <div><strong id="totalInstitutionMetric">—</strong><span>수행기관</span></div>
+                        <div><strong id="totalResearcherMetric">—</strong><span>연구책임자명</span></div>
+                    </div>
+                    <p class="dataset-source">IGMS 공개 데이터 <span>NRF · MOE · MOH/NMRC · A*STAR</span></p>
+                </div>
+            </section>
 
             <!-- VIEW 1: Dashboard -->
             <div id="view-dashboard" class="view-section space-y-8">
 
-                <!-- Search & Filter Card -->
-                <section
-                    class="bg-white rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] ring-1 ring-slate-900/5 p-6">
-                    <!-- Filters Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div class="space-y-1.5 hidden md:block">
-                            <label
-                                class="text-xs font-semibold text-slate-500 uppercase tracking-wider pl-1">Institution</label>
-                            <select id="institutionSelect" multiple class="w-full"></select>
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider pl-1">Principal
-                                Investigator</label>
-                            <select id="piSelect" multiple class="w-full"></select>
-                        </div>
+                <section id="searchSection" class="search-panel" aria-labelledby="searchTitle">
+                    <div class="section-heading">
+                        <div><p class="eyebrow">DISCOVER</p><h2 id="searchTitle">어떤 기술 파트너를 찾고 계신가요?</h2></div>
+                        <button id="resetBtn" type="button" class="text-button"><span aria-hidden="true">↻</span> 필터 초기화</button>
                     </div>
-
-                    <!-- Keywords & AI Toggle -->
-                    <div class="mb-8">
-                        <label
-                            class="text-xs font-semibold text-slate-500 uppercase tracking-wider pl-1 mb-2 block">Keywords
-                            Search</label>
-                        <div class="relative group">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors"
-                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                            </div>
-                            <input type="text" id="keywordInput"
-                                class="block w-full pl-10 pr-32 py-3 border border-slate-200 rounded-xl leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-sm"
-                                placeholder="Search by topic, title, or abstract...">
-
-                            <!-- AI Toggle Switch -->
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-                                <label class="inline-flex items-center cursor-pointer">
-                                    <span class="mr-3 text-xs font-semibold text-slate-500">AI Search</span>
-                                    <div class="relative">
-                                        <input type="checkbox" id="aiSearchToggle" class="sr-only peer">
-                                        <div
-                                            class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600">
-                                        </div>
-                                    </div>
-                                </label>
-                            </div>
+                    <label for="keywordInput" class="field-label">기술·연구 키워드</label>
+                    <div class="search-input-row">
+                        <div class="search-input-wrap">
+                            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+                            <input type="search" id="keywordInput" placeholder="기술 주제, 과제명, 초록으로 검색하세요" autocomplete="off" aria-describedby="searchHelp">
                         </div>
-                        <!-- AI Progress -->
-                        <div id="aiProgress" class="hidden mt-3 max-w-xl mx-auto">
-                            <div class="flex justify-between text-xs font-semibold text-indigo-600 mb-1">
-                                <span id="aiStatusText">Initializing AI Model...</span>
-                                <span id="aiProgressPercent">0%</span>
-                            </div>
-                            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                                <div id="aiProgressBar"
-                                    class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300"
-                                    style="width: 0%"></div>
-                            </div>
-                        </div>
+                        <label class="ai-toggle"><input type="checkbox" id="aiSearchToggle"><span class="toggle-track" aria-hidden="true"></span><span>AI 의미 검색</span></label>
                     </div>
-
-                    <!-- Filter Row -->
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6 border-t border-slate-100">
-                        <!-- Status Filters -->
-                        <div class="lg:col-span-5 space-y-3">
-                            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Project
-                                Status</label>
-                            <div id="statusFilters" class="flex flex-wrap gap-2 text-sm">
-                                <!-- Checkboxes will be injected here by JS -->
-                            </div>
-                        </div>
-
-                        <!-- Date Range -->
-                        <div class="lg:col-span-3 space-y-3">
-                            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Start
-                                Date</label>
-                            <div class="flex items-center gap-2">
-                                <input type="text" id="dateFrom"
-                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    placeholder="From">
-                                <span class="text-slate-400">-</span>
-                                <input type="text" id="dateTo"
-                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    placeholder="To">
-                            </div>
-                        </div>
-
-                        <!-- Duration -->
-                        <div class="lg:col-span-4 space-y-3">
-                            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Duration
-                                (Months)</label>
-                            <div class="flex items-center gap-2">
-                                <input type="number" id="durationMin"
-                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    placeholder="Min" min="0">
-                                <span class="text-slate-400">-</span>
-                                <input type="number" id="durationMax"
-                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    placeholder="Max" min="0">
-                            </div>
-                        </div>
+                    <div class="search-help-row"><p id="searchHelp">입력하면 자동 검색됩니다. 영어 키워드를 권장해요.</p><div class="suggestions" aria-label="검색 예시"><span>예시</span><button type="button" data-search="machine learning">Machine learning</button><button type="button" data-search="semiconductor">Semiconductor</button><button type="button" data-search="energy">Energy</button></div></div>
+                    <div id="aiProgress" class="hidden ai-progress" role="status">
+                        <div class="flex justify-between text-xs mb-1"><span id="aiStatusText">AI 모델 준비 중...</span><span id="aiProgressPercent">0%</span></div>
+                        <div class="progress-track"><div id="aiProgressBar" style="width:0%"></div></div>
                     </div>
-
-                    <!-- Action Footer -->
-                    <div
-                        class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 pt-6 border-t border-slate-100">
-                        <button id="resetBtn"
-                            class="text-slate-500 hover:text-slate-800 text-sm font-medium flex items-center transition-colors">
-                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                                </path>
-                            </svg>
-                            Reset Filters
-                        </button>
+                    <div class="primary-filters">
+                        <div><label for="institutionSelect" class="field-label">수행기관 <span>Institution</span></label><select id="institutionSelect" multiple aria-label="수행기관"></select></div>
+                        <div><label for="piSelect" class="field-label">연구책임자 <span>Principal investigator</span></label><select id="piSelect" multiple aria-label="연구책임자"></select></div>
                     </div>
+                    <details class="advanced-filters" id="advancedFilters">
+                        <summary>상세 검색 조건 <span>과제 상태 · 시작일 · 연구 기간</span><svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="m5 8 5 5 5-5"/></svg></summary>
+                        <div class="secondary-filters">
+                            <fieldset><legend class="field-label">과제 상태</legend><div id="statusFilters"></div></fieldset>
+                            <fieldset><legend class="field-label">과제 시작일</legend><div class="range-fields"><input type="text" id="dateFrom" placeholder="시작 날짜" aria-label="과제 시작일 이후"><span>–</span><input type="text" id="dateTo" placeholder="종료 날짜" aria-label="과제 시작일 이전"></div></fieldset>
+                            <fieldset><legend class="field-label">연구 기간 <span>개월</span></legend><div class="range-fields"><input type="number" id="durationMin" min="0" placeholder="최소" aria-label="최소 연구 기간"><span>–</span><input type="number" id="durationMax" min="0" placeholder="최대" aria-label="최대 연구 기간"></div></fieldset>
+                        </div>
+                    </details>
                 </section>
 
                 <!-- Results Header & Sort -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-2">
-                    <span id="resultsCount" class="text-slate-500 font-medium text-sm">Loading...</span>
+                <div class="results-toolbar" id="resultsSection">
+                    <div><h2>검색 결과</h2>
+                    <span id="resultsCount" role="status" aria-live="polite">연구 데이터를 불러오는 중...</span></div>
 
                     <div class="flex items-center gap-2">
                         <button id="shareBtn" type="button"
@@ -257,44 +183,55 @@
                             공유
                         </button>
                         <label for="sortSelect"
-                            class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sort By</label>
+                            class="text-xs font-semibold text-slate-500 uppercase tracking-wider">정렬</label>
                         <select id="sortSelect"
                             class="pl-3 pr-8 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm appearance-none cursor-pointer">
-                            <option value="date-desc">Start Date (Newest)</option>
-                            <option value="date-asc">Start Date (Oldest)</option>
-                            <option value="title-asc">Title (A-Z)</option>
-                            <option value="status-asc">Status</option>
-                            <option value="pi-asc">PI Name</option>
+                            <option value="date-desc">시작일 최신순</option>
+                            <option value="date-asc">시작일 오래된순</option>
+                            <option value="title-asc">과제명 A–Z</option>
+                            <option value="status-asc">과제 상태</option>
+                            <option value="pi-asc">연구책임자명</option>
                         </select>
                     </div>
                 </div>
 
+                <div class="insights-heading" id="insightsSection"><h2>연구 인사이트</h2><p>차트를 클릭해 결과를 좁혀보세요</p></div>
                 <!-- Charts Section -->
-                <section id="chartsSection" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <section aria-label="검색 결과 분석 차트" id="chartsSection" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <!-- Word Cloud -->
                     <div id="wordCloudContainer"
                         class="chart-container bg-white p-5 rounded-2xl shadow-sm border border-slate-100/60 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer h-72">
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Top Keywords</h3>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">주요 연구 키워드</h3>
                         <div id="wordCloud" class="w-full h-[calc(100%-24px)] flex items-center justify-center"></div>
                     </div>
                     <!-- Bar Chart -->
                     <div
                         class="chart-container bg-white p-5 rounded-2xl shadow-sm border border-slate-100/60 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer h-72">
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">By Institution</h3>
-                        <div class="h-[calc(100%-24px)] relative"><canvas id="barChart"></canvas></div>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">기관별 과제 수</h3>
+                        <div class="h-[calc(100%-24px)] relative"><canvas id="barChart" role="img" aria-label="기관별 연구 과제 수"></canvas></div>
                     </div>
                     <!-- Line Chart -->
                     <div
                         class="chart-container bg-white p-5 rounded-2xl shadow-sm border border-slate-100/60 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer h-72">
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Timeline Trend</h3>
-                        <div class="h-[calc(100%-24px)] relative"><canvas id="lineChart"></canvas></div>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">연도별 연구 추이</h3>
+                        <div class="h-[calc(100%-24px)] relative"><canvas id="lineChart" role="img" aria-label="연도별 연구 과제 추이"></canvas></div>
                     </div>
                     <!-- Pie Chart -->
                     <div
                         class="chart-container bg-white p-5 rounded-2xl shadow-sm border border-slate-100/60 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer h-72">
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Status Distribution
-                        </h3>
-                        <div class="h-[calc(100%-24px)] relative"><canvas id="pieChart"></canvas></div>
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">과제 상태 분포</h3>
+                        <div class="h-[calc(100%-24px)] relative"><canvas id="pieChart" role="img" aria-label="과제 상태 분포"></canvas></div>
+                    </div>
+                </section>
+
+                <section class="projects-section" aria-label="연구 과제 목록">
+                    <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <!-- JS populate cards -->
+                    </div>
+
+                    <!-- Pagination -->
+                    <div id="pagination"
+                        class="pagination flex justify-center items-center gap-2 mt-8 pt-6" aria-label="검색 결과 페이지">
                     </div>
                 </section>
 
@@ -302,12 +239,12 @@
                 <section id="networkSection" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                         <div>
-                            <h3 class="text-lg font-bold text-slate-800">Network Visualization</h3>
-                            <p class="text-sm text-slate-500">Connections between researches, institutions, and topics
+                            <h2 class="network-title text-lg font-bold text-slate-800">협력 네트워크</h2>
+                            <p class="text-sm text-slate-500">기관·연구자·과제·연구 주제의 연결 관계를 살펴보세요
                             </p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <select id="graphLimitSelect" onchange="onLimitChange()"
+                            <select id="graphLimitSelect" aria-label="네트워크 최대 과제 수" onchange="onLimitChange()"
                                 class="bg-indigo-50 border-transparent text-indigo-700 text-sm font-semibold rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block px-4 py-2.5 cursor-pointer hover:bg-indigo-100 transition-colors appearance-none text-center min-w-[140px]">
                                 <option value="200" selected>Max 200 Projects</option>
                                 <option value="500">Max 500 Projects</option>
@@ -351,21 +288,9 @@
 
                     <div id="dashboardGraphControls" class="flex justify-center gap-3 mt-4">
                         <button onclick="fitDashboardGraph()"
-                            class="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-200 transition-colors">Fit
-                            Review</button>
+                            class="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-200 transition-colors">전체 보기</button>
                     </div>
                     <div id="dashboardNodePopup"></div>
-                </section>
-
-                <section class="">
-                    <div id="resultsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        <!-- JS populate cards -->
-                    </div>
-
-                    <!-- Pagination -->
-                    <div id="pagination"
-                        class="flex justify-center items-center gap-2 mt-8 pt-6 border-t border-slate-100">
-                    </div>
                 </section>
 
                 <!-- Network Graph Section -->
@@ -374,10 +299,10 @@
 
         </main>
 
-        <footer class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
-            <div style="border-top:1px solid #eef0f3;padding-top:16px;font-size:12px;color:#98a2b3;line-height:1.8;">
+        <footer class="workspace site-footer" id="dataSource"><div class="footer-brand">TechPartners <span>싱가포르 기술 협력 파트너 검색시스템</span></div>
+            <div class="source-description">
                 데이터 출처: 싱가포르 정부 IGMS(Integrated Grant Management System,
-                <a href="https://www.researchgrant.gov.sg/Grant/Awarded" rel="noopener" style="color:#667085;">researchgrant.gov.sg</a>)
+                <a href="https://www.researchgrant.gov.sg/Grant/Awarded" rel="noopener" >researchgrant.gov.sg</a>)
                 수상 과제 공개 정보 6,130건 (2006–2026).
                 주요 지원기관: NRF · MOE · MOH/NMRC · A*STAR.
                 검색·시각화 기능은 브라우저에서 직접 동작하며 별도 로그인이 필요하지 않습니다.
@@ -388,19 +313,19 @@
         <div id="loadingOverlay"
             class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm">
             <div class="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-            <p class="text-indigo-600 font-medium animate-pulse">Loading IGMS Data...</p>
+            <p class="text-indigo-600 font-medium animate-pulse">연구 데이터를 불러오는 중...</p>
         </div>
 
         <!-- Detail Modal -->
-        <div id="detailModal" class="modal fixed inset-0 z-[60] hidden">
+        <div id="detailModal" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle" class="modal fixed inset-0 z-[60] hidden">
             <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0"
                 id="detailModalBackdrop"></div>
             <div
                 class="modal-content relative bg-white w-full max-w-4xl m-4 md:m-auto rounded-2xl shadow-2xl p-0 opacity-0 transform translate-y-4 scale-95 transition-all duration-300 max-h-[90vh] flex flex-col">
                 <div
                     class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-2xl">
-                    <h2 class="text-lg font-bold text-slate-800">Project Details</h2>
-                    <button id="modalClose" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <h2 class="text-lg font-bold text-slate-800" id="detailModalTitle">연구 과제 상세</h2>
+                    <button id="modalClose" type="button" aria-label="닫기" class="text-slate-400 hover:text-slate-600 transition-colors">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M6 18L18 6M6 6l12 12"></path>
@@ -414,13 +339,13 @@
         </div>
 
         <!-- Chart Modal -->
-        <div id="chartModal" class="modal fixed inset-0 z-[60] hidden">
+        <div id="chartModal" role="dialog" aria-modal="true" aria-labelledby="chartModalTitle" class="modal fixed inset-0 z-[60] hidden">
             <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
             <div
                 class="modal-content relative bg-white w-full max-w-5xl m-4 md:m-auto rounded-2xl shadow-2xl p-6 max-h-[90vh] flex flex-col">
                 <div class="flex justify-between items-center mb-6">
                     <h2 id="chartModalTitle" class="text-xl font-bold text-slate-800"></h2>
-                    <button id="chartModalClose" class="text-slate-400 hover:text-slate-600">
+                    <button id="chartModalClose" type="button" aria-label="닫기" class="text-slate-400 hover:text-slate-600">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M6 18L18 6M6 6l12 12"></path>
@@ -434,13 +359,13 @@
         </div>
 
         <!-- Word Cloud Modal -->
-        <div id="wordCloudModal" class="modal fixed inset-0 z-[60] hidden">
+        <div id="wordCloudModal" role="dialog" aria-modal="true" aria-labelledby="wordCloudTitle" class="modal fixed inset-0 z-[60] hidden">
             <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
             <div
                 class="modal-content relative bg-white w-full max-w-5xl m-4 md:m-auto rounded-2xl shadow-2xl p-6 max-h-[90vh] flex flex-col">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-slate-800">Top Research Keywords</h2>
-                    <button id="wordCloudModalClose" class="text-slate-400 hover:text-slate-600">
+                    <h2 class="text-xl font-bold text-slate-800" id="wordCloudTitle">주요 연구 키워드</h2>
+                    <button id="wordCloudModalClose" type="button" aria-label="닫기" class="text-slate-400 hover:text-slate-600">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M6 18L18 6M6 6l12 12"></path>
@@ -465,7 +390,7 @@
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3-cloud@1.2.5/build/d3.layout.cloud.min.js"></script>
 
-    <section aria-label="방문 통계 설정" class="mx-auto max-w-7xl px-6 py-4 text-sm text-slate-600">
+    <section aria-label="방문 통계 설정" class="workspace privacy-section">
         <div id="analytics-consent" hidden>
             <p>Google Analytics로 방문과 검색 완료 횟수를 집계합니다. 허용하면 쿠키 등 식별자를 사용할 수 있습니다.
                 검색어·연구자명·이메일·업로드 내용은 전송하지 않습니다. 거절해도 검색을 사용할 수 있습니다.</p>
@@ -494,7 +419,7 @@
 
     <!-- Custom JS -->
     <script type="module" src="/dashboard/js/ai-search.js"></script>
-    <script src="/dashboard/js/app.js?v=6"></script>
+    <script src="/dashboard/js/app.js?v=8"></script>
 </body>
 
 </html>
