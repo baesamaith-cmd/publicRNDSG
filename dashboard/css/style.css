@@ -186,7 +186,18 @@ button, a { transition: color .16s, border-color .16s, background-color .16s; }
 .modal-content button[aria-label=닫기]:hover { background: #eaf0f3; }
 #chartModal .chart-modal-container { min-height: 300px; }
 #modalWordCloud { min-height: 300px; overflow: hidden; }
-#loadingOverlay { color: var(--brand); }
+/* DESIGN.md: static loading state, with no spin, pulse or simulated progress. */
+.loading-overlay { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 32px 24px; overflow-y: auto; background: var(--canvas); color: var(--ink); }
+.loading-overlay.hidden { display: none; }
+.loading-content { width: min(100%, 360px); margin: auto; text-align: center; }
+.loading-wordmark { font-size: 18px; font-weight: 750; letter-spacing: -.6px; }
+.loading-wordmark span { font-weight: 450; }
+.loading-illustration { display: block; width: min(240px, 100%); height: auto; margin: 30px auto 24px; }
+.loading-title { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -.4px; line-height: 1.7; word-break: keep-all; }
+.loading-description { margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.8; word-break: keep-all; }
+.loading-retry { margin-top: 22px; border: 1px solid var(--brand); border-radius: 7px; min-height: 44px; padding: 10px 20px; background: var(--brand); color: white; font-size: 13px; font-weight: 600; }
+.loading-retry:hover { background: var(--brand-dark); }
+.loading-retry[hidden] { display: none; }
 .share-toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); padding: 12px 22px; border-radius: 8px; background: var(--ink); color: white; font-size: 13px; z-index: 300; box-shadow: 0 8px 28px #152b3c30; opacity: 0; pointer-events: none; transition: opacity .2s; }
 .share-toast.show { opacity: 1; }
 @media (max-width: 1100px) {

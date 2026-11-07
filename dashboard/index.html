@@ -79,10 +79,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
     <!-- Tailwind CSS (Built) -->
-    <link href="/dashboard/css/output.css?v=11" rel="stylesheet">
+    <link href="/dashboard/css/output.css?v=12" rel="stylesheet">
 
     <!-- Custom CSS (Overrides & Libraries) -->
-    <link rel="stylesheet" href="/dashboard/css/style.css?v=12">
+    <link rel="stylesheet" href="/dashboard/css/style.css?v=13">
 </head>
 
 <body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-indigo-100 selection:text-indigo-700">
@@ -310,10 +310,25 @@
         </footer>
 
         <!-- Loading Overlay -->
-        <div id="loadingOverlay"
-            class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm">
-            <div class="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-            <p class="text-indigo-600 font-medium animate-pulse">연구 데이터를 불러오는 중...</p>
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="loading-content">
+                <div class="loading-wordmark" aria-hidden="true">Tech<span>Partners</span></div>
+                <svg class="loading-illustration" viewBox="0 0 240 136" fill="none" aria-hidden="true" focusable="false">
+                    <path d="M48 102v15h144v-15M120 98v19" stroke="var(--line)" stroke-width="1.5"/>
+                    <rect x="17" y="39" width="62" height="64" rx="6" fill="var(--surface)" stroke="var(--line)"/>
+                    <path d="M30 56h25M30 66h36M30 76h28" stroke="#bcccd1" stroke-width="2" stroke-linecap="round"/>
+                    <rect x="161" y="39" width="62" height="64" rx="6" fill="var(--surface)" stroke="var(--line)"/>
+                    <path d="M174 56h25M174 66h36M174 76h28" stroke="#bcccd1" stroke-width="2" stroke-linecap="round"/>
+                    <rect x="84" y="14" width="72" height="85" rx="7" fill="var(--brand-soft)" stroke="#a9cbc5"/>
+                    <path d="M101 29h19v19h-19zM113 41h19v19h-19zM120 29h12v12" stroke="var(--brand)" stroke-width="2"/>
+                    <path d="M100 74h40M100 83h27" stroke="#9fbfb9" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <div id="loadingStatus" role="status" aria-live="polite" aria-atomic="true">
+                    <p id="loadingTitle" class="loading-title">연구 데이터를 불러오고 있어요</p>
+                    <p id="loadingDescription" class="loading-description">기관과 연구자 정보를 준비합니다.</p>
+                </div>
+                <button id="loadingRetry" class="loading-retry" type="button" onclick="window.location.reload()" hidden>다시 불러오기</button>
+            </div>
         </div>
 
         <!-- Detail Modal -->
@@ -419,7 +434,7 @@
 
     <!-- Custom JS -->
     <script type="module" src="/dashboard/js/ai-search.js"></script>
-    <script src="/dashboard/js/app.js?v=8"></script>
+    <script src="/dashboard/js/app.js?v=9"></script>
 </body>
 
 </html>

@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Initialize Application - called from auth.js after login
 async function initApp() {
-    await loadData();
+    if (!await loadData()) return;
     initializeUI();
     const restored = restoreFiltersFromURL();
     if (restored && new URLSearchParams(location.search).get('ai') === '1')
@@ -146,6 +146,7 @@ async function loadData() {
     try {
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             const response = await fetch('/dashboard/data/projects.json');
+            if (!response.ok) throw new Error(`Data error: ${response.status}`);
             allProjects = await response.json();
         } else {
             const response = await fetch(API_URL);
@@ -166,9 +167,13 @@ async function loadData() {
         }
 
         document.getElementById('loadingOverlay').classList.add('hidden');
+        return true;
     } catch (error) {
         console.error('Error loading data:', error);
-        document.getElementById('loadingOverlay').innerHTML = '<p>데이터 로딩 오류. 페이지를 새로고침 해주세요.</p>';
+        document.getElementById('loadingTitle').textContent = '데이터를 불러오지 못했어요';
+        document.getElementById('loadingDescription').textContent = '인터넷 연결을 확인한 뒤 다시 시도해 주세요.';
+        document.getElementById('loadingRetry').hidden = false;
+        return false;
     }
 }
 
