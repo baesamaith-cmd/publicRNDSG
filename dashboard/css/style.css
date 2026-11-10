@@ -195,6 +195,8 @@ button, a { transition: color .16s, border-color .16s, background-color .16s; }
 .loading-illustration { display: block; width: min(240px, 100%); height: auto; margin: 30px auto 24px; }
 .loading-title { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -.4px; line-height: 1.7; word-break: keep-all; }
 .loading-description { margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.8; word-break: keep-all; }
+.loading-title-en { margin: 18px 0 0; font-size: 14px; font-weight: 550; line-height: 1.6; }
+.loading-description-en { margin-top: 4px; word-break: normal; }
 .loading-retry { margin-top: 22px; border: 1px solid var(--brand); border-radius: 7px; min-height: 44px; padding: 10px 20px; background: var(--brand); color: white; font-size: 13px; font-weight: 600; }
 .loading-retry:hover { background: var(--brand-dark); }
 .loading-retry[hidden] { display: none; }

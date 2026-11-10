@@ -172,6 +172,8 @@ async function loadData() {
         console.error('Error loading data:', error);
         document.getElementById('loadingTitle').textContent = '데이터를 불러오지 못했어요';
         document.getElementById('loadingDescription').textContent = '인터넷 연결을 확인한 뒤 다시 시도해 주세요.';
+        document.getElementById('loadingTitleEn').textContent = 'Unable to load research data';
+        document.getElementById('loadingDescriptionEn').textContent = 'Check your internet connection and try again.';
         document.getElementById('loadingRetry').hidden = false;
         return false;
     }
